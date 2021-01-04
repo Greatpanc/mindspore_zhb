@@ -935,7 +935,7 @@ int ElementLogicalAnd(const float *input0, const float *input1, float *output, c
 int ElementLogicalAndInt(const int *input0, const int *input1, int *output, const int element_size) {
   int index = 0;
   for (; index < element_size; index++) {
-    output[index] = (int)((int)(input0[index]) & (int)(input1[index]));
+    output[index] = (int)((unsigned int)(input0[index]) & (unsigned int)(input1[index]));
   }
   return NNACL_OK;
 }
@@ -943,7 +943,7 @@ int ElementLogicalAndInt(const int *input0, const int *input1, int *output, cons
 int ElementLogicalAndBool(const bool *input0, const bool *input1, bool *output, const int element_size) {
   int index = 0;
   for (; index < element_size; index++) {
-    output[index] = (bool)((bool)(input0[index]) & (bool)(input1[index]));
+    output[index] = (bool)((unsigned int)(input0[index]) & (unsigned int)(input1[index]));
   }
   return NNACL_OK;
 }
