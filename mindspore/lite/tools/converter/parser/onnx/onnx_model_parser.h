@@ -60,7 +60,7 @@ class OnnxModelParser : public ModelParser {
   STATUS ConvertGraphOutputs();
   STATUS BuildReturnNode(const std::vector<AnfNodePtr> &return_inputs);
   STATUS BuildParameterNode(const ParameterPtr &parameter_node, const onnx::TensorProto &tensor);
-  STATUS BuildParameterNodeForQuantParam(void *data, const std::string &name, TypeId type);
+  STATUS BuildParameterNodeForQuantParam(const void *data, const std::string &name, TypeId type);
   STATUS BuildCNode(const onnx::NodeProto &onnx_node, lite::PrimitiveC *primitive_c);
   STATUS BuildOpOutputs(const onnx::NodeProto &onnx_node, const CNodePtr &cnode);
   STATUS ConvertSpecialOnnxNode(const onnx::NodeProto &onnx_node, lite::PrimitiveC *primitive_c);

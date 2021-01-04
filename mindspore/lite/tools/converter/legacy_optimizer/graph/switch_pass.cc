@@ -95,7 +95,7 @@ STATUS SingleSwitchPass::UpdateSwitchUser() {
 
 bool SingleSwitchPass::IsLoop() {
   for (auto &node : body_graph_nodes_) {
-    if (node->primitive->value.type == schema::PrimitiveType_Partial &&
+    if (node->primitive->value.type == schema::PrimitiveType_Partial && node->primitive->value.AsPartial() != nullptr &&
         node->primitive->value.AsPartial()->subGraphIndex == cond_subgraph_index_) {
       body_to_cond_partial_node_ = node;
       return true;
@@ -311,6 +311,7 @@ STATUS SingleSwitchPass::Init() {
   }
 
   // get cond_graph_nodes_
+  MS_ASSERT(first_partial_node_->primitive->value.AsPartial() != nullptr);
   cond_subgraph_index_ = cond_partial_node_->primitive->value.AsPartial()->subGraphIndex;
   auto cond_node_indices = graph_->subGraph.at(cond_subgraph_index_)->nodeIndices;
   for (auto &index : cond_node_indices) {
@@ -318,6 +319,7 @@ STATUS SingleSwitchPass::Init() {
   }
 
   // get body_graph_nodes_
+  MS_ASSERT(second_partial_node_->primitive->value.AsPartial() != nullptr);
   body_subgraph_index_ = body_partial_node_->primitive->value.AsPartial()->subGraphIndex;
   auto body_node_indices = graph_->subGraph.at(body_subgraph_index_)->nodeIndices;
   for (auto &index : body_node_indices) {

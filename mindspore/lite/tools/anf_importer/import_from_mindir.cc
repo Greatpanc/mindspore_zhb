@@ -900,10 +900,12 @@ onnx::ModelProto *AnfImporterFromMindir::ReadOnnxFromBinary(const std::string &m
   auto onnx_model = new (std::nothrow) onnx::ModelProto;
   if (onnx_model == nullptr) {
     MS_LOG(ERROR) << "New onnx ModelProto failed!";
+    delete (onnx_model);
     return nullptr;
   }
   if (RET_OK != ValidateFileStr(model_path, ".mindir")) {
     MS_LOG(ERROR) << "INPUT ILLEGAL: modelFile must be *.mindir";
+    delete (onnx_model);
     return nullptr;
   }
   if (ReadProtoFromBinaryFile((const char *)model_path.c_str(), onnx_model) != RET_OK) {
