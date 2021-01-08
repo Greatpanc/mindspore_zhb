@@ -544,6 +544,7 @@ LiteSession::~LiteSession() {
   mindspore::lite::NPUPassManager::GetInstance()->Clear();
   mindspore::lite::NPUManager::GetInstance()->Reset();
 #endif
+  delete (model_);
   is_running_.store(false);
 }
 
@@ -720,7 +721,7 @@ session::LiteSession *session::LiteSession::CreateSession(const char *model_buf,
     return nullptr;
   }
   model->buf = nullptr;
-  delete (model);
+  (reinterpret_cast<lite::LiteSession *>(session))->set_model(model);
   return session;
 }
 }  // namespace mindspore
