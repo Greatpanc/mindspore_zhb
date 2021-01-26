@@ -53,6 +53,14 @@ STATUS FormatTransPass::DoModelInputFormatTrans(schema::MetaGraphT *graph) {
   if (graph->nodes.empty()) {
     return RET_OK;
   }
+  // onnx input format may be nhwc
+  if (fmkType == converter::FmkType_ONNX && graph->inputIndex.size() == 1) {
+    auto &input_tensor = graph->allTensors.at(graph->inputIndex[0]);
+    auto &input_dims = input_tensor->dims;
+    if (IsContain(input_dims, -1) && input_dims.size() == 4 && input_dims[3] != -1) {
+      return RET_OK;
+    }
+  }
   auto graphInputIdxes = graph->inputIndex;
   for (size_t i = 0; i < graphInputIdxes.size(); i++) {
     bool transed = false;

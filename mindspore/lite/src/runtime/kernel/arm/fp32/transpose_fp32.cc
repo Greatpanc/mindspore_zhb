@@ -171,6 +171,7 @@ int TransposeCPUKernel::Run() {
 }
 
 REG_KERNEL(kCPU, kNumberTypeFloat32, PrimitiveType_Transpose, LiteKernelCreator<TransposeCPUKernel>)
+REG_KERNEL(kCPU, kNumberTypeInt32, PrimitiveType_Transpose, LiteKernelCreator<TransposeCPUKernel>)
 REG_KERNEL(kCPU, kNumberTypeInt8, PrimitiveType_Transpose, LiteKernelCreator<TransposeCPUKernel>)
 REG_KERNEL(kCPU, kNumberTypeFloat32, PrimitiveType_Nchw2Nhwc, LiteKernelCreator<TransposeCPUKernel>)
 REG_KERNEL(kCPU, kNumberTypeInt8, PrimitiveType_Nchw2Nhwc, LiteKernelCreator<TransposeCPUKernel>)
