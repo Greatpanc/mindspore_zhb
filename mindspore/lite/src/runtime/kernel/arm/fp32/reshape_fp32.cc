@@ -40,6 +40,7 @@ int ReshapeCPUKernel::Run() {
   return RET_OK;
 }
 
+REG_KERNEL(kCPU, kNumberTypeBool, PrimitiveType_Reshape, LiteKernelCreator<ReshapeCPUKernel>)
 REG_KERNEL(kCPU, kNumberTypeInt32, PrimitiveType_Reshape, LiteKernelCreator<ReshapeCPUKernel>)
 REG_KERNEL(kCPU, kNumberTypeFloat32, PrimitiveType_Reshape, LiteKernelCreator<ReshapeCPUKernel>)
 }  // namespace mindspore::kernel
