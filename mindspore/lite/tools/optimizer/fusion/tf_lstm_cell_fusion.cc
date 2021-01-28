@@ -247,14 +247,20 @@ STATUS TfLstmCellFusion::PopulateBiasNode(const EquivPtr &body_equiv, const Para
   default_param->set_tensor_type(kNumberTypeFloat32);
   default_param->set_format(schema::Format_NHWC);
   auto tensor_data = new (std::nothrow) float[hidden_size * 8];
+  if (tensor_data == nullptr) {
+    MS_LOG(ERROR) << "allocate tensor data failed";
+    return RET_ERROR;
+  }
 
   auto forget_bias_node = utils::cast<AnfNodePtr>((*body_equiv)[forget_bias_]);
   if (forget_bias_node == nullptr) {
     MS_LOG(ERROR) << "forget bias node is nullptr";
+    delete[] tensor_data;
     return RET_ERROR;
   }
   float forget_bias_value = 0.0f;
   if (GetFloatScalarFromParamValueLite(forget_bias_node, &forget_bias_value) != RET_OK) {
+    delete[] tensor_data;
     return RET_ERROR;
   }
 

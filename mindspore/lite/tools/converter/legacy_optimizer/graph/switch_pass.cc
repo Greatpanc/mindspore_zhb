@@ -56,12 +56,18 @@ STATUS SwitchPass::Run(mindspore::schema::MetaGraphT *graph) {
   graph->subGraph.swap(new_sub_graphs);
   for (size_t i = 0; i < graph->nodes.size(); ++i) {
     auto &node = graph->nodes.at(i);
+    if (node->primitive == nullptr) {
+      MS_LOG(ERROR) << "node->primitive is nullptr";
+      return RET_ERROR;
+    }
     auto type = node->primitive->value.type;
     if (type != schema::PrimitiveType_Partial) {
       continue;
     }
-    MS_ASSERT(node->primitive != nullptr);
-    MS_ASSERT(node->primitive->value.AsPartial() != nullptr);
+    if (node->primitive->value.AsPartial() == nullptr) {
+      MS_LOG(ERROR) << "node->primitive->value.AsPartial() is nullptr";
+      return RET_ERROR;
+    }
     auto partial_prim = node->primitive->value.AsPartial();
     if (partial_prim->subGraphIndex == -1) {
       continue;
@@ -623,8 +629,14 @@ STATUS SingleSwitchPass::UpdateSubgraphOutput(const size_t &subgraph_index, sche
 
 STATUS SingleSwitchPass::ConcatCondSubgraphInputAndOutput() {
   if (first_subgraph_index_ == -1) {
-    MS_ASSERT(first_partial_node_->primitive != nullptr);
-    MS_ASSERT(first_partial_node_->primitive->value.AsPartial() != nullptr);
+    if (first_partial_node_->primitive == nullptr) {
+      MS_LOG(ERROR) << "node->primitive is nullptr";
+      return RET_ERROR;
+    }
+    if (first_partial_node_->primitive->value.AsPartial() == nullptr) {
+      MS_LOG(ERROR) << "node->primitive->value.AsPartial() is nullptr";
+      return RET_ERROR;
+    }
     first_partial_node_->primitive->value.AsPartial()->subGraphIndex = -1;
     return RET_OK;
   }
@@ -644,8 +656,14 @@ STATUS SingleSwitchPass::ConcatCondSubgraphInputAndOutput() {
 
 STATUS SingleSwitchPass::ConcatBodySubgraphInputAndOutput() {
   if (second_subgraph_index_ == -1) {
-    MS_ASSERT(first_partial_node_->primitive != nullptr);
-    MS_ASSERT(first_partial_node_->primitive->value.AsPartial() != nullptr);
+    if (first_partial_node_->primitive == nullptr) {
+      MS_LOG(ERROR) << "node->primitive is nullptr";
+      return RET_ERROR;
+    }
+    if (first_partial_node_->primitive->value.AsPartial() == nullptr) {
+      MS_LOG(ERROR) << "node->primitive->value.AsPartial() is nullptr";
+      return RET_ERROR;
+    }
     first_partial_node_->primitive->value.AsPartial()->subGraphIndex = -1;
     return RET_OK;
   }

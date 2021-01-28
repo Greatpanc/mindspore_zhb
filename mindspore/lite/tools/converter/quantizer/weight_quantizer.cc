@@ -412,7 +412,15 @@ float CompareOutputData(const std::unordered_map<std::string, mindspore::tensor:
       return RET_ERROR;
     }
     auto exp_data = static_cast<T *>(exp_tensor->MutableData());
+    if (exp_data == nullptr) {
+      MS_LOG(ERROR) << "get data of exp tensor failed.";
+      return RET_ERROR;
+    }
     auto cmp_data = static_cast<T *>(cmp_tensor->MutableData());
+    if (cmp_data == nullptr) {
+      MS_LOG(ERROR) << "get data of cmp tensor failed.";
+      return RET_ERROR;
+    }
     auto elem_cnt = exp_tensor->ElementsNum();
     for (int i = 0; i < elem_cnt; i++) {
       if (!valid_data(exp_data[i]) || !valid_data(cmp_data[i])) {
@@ -583,10 +591,15 @@ STATUS WeightQuantizer::DoMixedQuant(FuncGraphPtr func_graph) {
       auto *raw_data = static_cast<float *>(param_value->tensor_addr());
       auto elem_count = param_value->tensor_shape_size();
       auto origin_data = malloc(sizeof(float) * elem_count);
+      if (origin_data == nullptr) {
+        MS_LOG(ERROR) << "malloc data fail, size is: " << sizeof(float) * elem_count;
+        return RET_ERROR;
+      }
       auto ret = memcpy_s(origin_data, sizeof(float) * elem_count, raw_data, param_value->tensor_size());
       if (ret != EOK) {
         MS_LOG(ERROR) << "memcpy fail: "
                       << " dst size: " << sizeof(float) * elem_count << " src size: " << param_value->tensor_size();
+        free(origin_data);
         return RET_ERROR;
       }
       // 1. try quant

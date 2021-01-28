@@ -28,10 +28,14 @@
 using mindspore::lite::converter::FmkType;
 namespace mindspore::opt {
 
+constexpr const int POS_INVALID = -1;
+
 class FunctionalizeWhile {
  public:
   FunctionalizeWhile(std::vector<AnfNodePtr> node_cluster, const CNodePtr &loop_cond_node, FuncGraphPtr fg)
       : node_cluster_(node_cluster), loop_cond_node_(loop_cond_node), fg_(fg) {}
+
+  ~FunctionalizeWhile() = default;
 
   // while
   STATUS BuildWhileNode();

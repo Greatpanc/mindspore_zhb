@@ -103,7 +103,7 @@ std::pair<float, float> OutlierMethod(std::vector<float> min_datas, std::vector<
 
 std::vector<int8_t> KMeans(float *data, size_t elem_count, size_t k, size_t epochs, schema::QuantParamT *quantParam);
 
-STATUS UpdateTensorDataAndSize(ParamValueLitePtr weight, void *quant_datas, int new_size);
+STATUS UpdateTensorDataAndSize(ParamValueLitePtr weight, const void *quant_datas, int new_size);
 
 template <typename T>
 T QuantizeData(const float originData, const schema::QuantParamT *quantParam) {

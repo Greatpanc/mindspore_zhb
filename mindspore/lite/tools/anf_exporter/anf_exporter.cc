@@ -267,7 +267,11 @@ int AnfExporter::Anf2Fb(const FuncGraphPtr &func_graph, const std::unique_ptr<sc
         MS_ASSERT(primT != nullptr);
         auto pos = fg_subgraph_map.find(fg);
         if (pos != fg_subgraph_map.end()) {
-          MS_ASSERT(primT->value.AsPartial() != nullptr);
+          if (primT->value.AsPartial() == nullptr) {
+            MS_LOG(ERROR) << "primT->value.AsPartial() is nullptr";
+            ret = RET_ERROR;
+            break;
+          }
           primT->value.AsPartial()->subGraphIndex = fg_subgraph_map.at(fg);
         } else {
           size_t next_subgraph_index = fg_subgraph_map.size() + 1;

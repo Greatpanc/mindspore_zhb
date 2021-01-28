@@ -865,7 +865,7 @@ void GetLiteParameter(const AnfNodePtr &node, ParameterPtr *param_node, ParamVal
   }
 }
 
-STATUS UpdateTensorDataAndSize(ParamValueLitePtr weight, void *quant_datas, int new_size) {
+STATUS UpdateTensorDataAndSize(ParamValueLitePtr weight, const void *quant_datas, int new_size) {
   MS_ASSERT(weight != nullptr);
   MS_ASSERT(new_size > 0);
   delete[] reinterpret_cast<char *>(weight->tensor_addr());

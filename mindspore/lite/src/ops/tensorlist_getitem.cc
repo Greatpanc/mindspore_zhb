@@ -187,6 +187,10 @@ int TensorListGetItem::InferShape(std::vector<lite::Tensor *> inputs_, std::vect
     output->set_data_type(GetElementDType());
     output->set_shape(element_shape_);
   }
+  if (input0->GetTensor(index_) == nullptr) {
+    MS_LOG(ERROR) << "input tensor " << index_ << " is invalid.";
+    return RET_ERROR;
+  }
   output->set_format(input0->GetTensor(index_)->format());
   return RET_OK;
 }

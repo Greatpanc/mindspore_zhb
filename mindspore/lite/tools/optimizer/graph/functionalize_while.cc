@@ -42,6 +42,10 @@ mindspore::ValueNodePtr GetWhileAnfPrim() {
 
   auto while_prim = std::make_shared<mindspore::lite::While>(while_primitiveT);
   mindspore::ValueNodePtr partial_anf_prim = NewValueNode(while_prim);
+  if (partial_anf_prim == nullptr) {
+    MS_LOG(ERROR) << "new ValueNode failed";
+    return nullptr;
+  }
   return partial_anf_prim;
 }
 }  // namespace
@@ -108,7 +112,7 @@ STATUS FunctionalizeWhile::IdentifyWhileNodeOutput() {
       auto merge_node = BlongToWhichMerge(switch_node);
       auto enter_node = BlongToWhichEnter(merge_node);
       int pos = PosInInputEnterNodes(enter_node);
-      if (pos == -1) {
+      if (pos == POS_INVALID) {
         MS_LOG(ERROR) << "not find in input enter nodes.";
         return RET_ERROR;
       }
