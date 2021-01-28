@@ -115,8 +115,7 @@ struct FusionEltwiseParameter {
                          const std::vector<lite::Tensor *> &in_tensors,
                          const std::map<lite::Tensor *, FusionEltwiseParameter *> &replace_map = {})
       : operator_(operator_init), name_(std::move(kernel_name)) {
-    for (int i = 0; i < in_tensors.size(); ++i) {
-      auto *in_tensor = in_tensors[i];
+    for (auto in_tensor : in_tensors) {
       if (replace_map.count(in_tensor)) {
         auto *pred_param = replace_map.at(in_tensor);
         inputs_.emplace_back(false, pred_param, pred_param->name_);
