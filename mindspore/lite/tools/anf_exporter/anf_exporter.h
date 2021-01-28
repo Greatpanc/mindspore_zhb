@@ -45,7 +45,7 @@ class AnfExporter {
 
  protected:
   int ConvertInputCNode(const std::shared_ptr<AnfNode> &input_anode, schema::CNodeT *output_cnode);
-  int ConvertInputParameter(const std::shared_ptr<AnfNode> &input_anode, const std::shared_ptr<PrimitiveC> &primitive,
+  int ConvertInputParameter(const std::shared_ptr<AnfNode> &input_anode,
                             const std::unique_ptr<schema::MetaGraphT> &meta_graphT, schema::CNodeT *output_cnode);
   int ConvertInputValueNode(const std::shared_ptr<AnfNode> &input_anode,
                             const std::unique_ptr<schema::MetaGraphT> &meta_graphT, schema::CNodeT *output_cnode);

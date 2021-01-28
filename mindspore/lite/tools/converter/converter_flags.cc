@@ -42,10 +42,6 @@ Flags::Flags() {
   AddFlag(&Flags::quantWeightSize, "quantWeightSize", "Weight quantization size threshold", "0");
   AddFlag(&Flags::quantWeightChannel, "quantWeightChannel", "Channel threshold for weight quantization", "16");
   AddFlag(&Flags::configFile, "configFile", "Configuration for post-training.", "");
-  AddFlag(&Flags::enableHuffmanCodeIn, "enableHuffmanCode",
-          "whether the weight quant model is going to use huffman code."
-          "true | false",
-          "false");
   AddFlag(&Flags::trainModelIn, "trainModel",
           "whether the model is going to be trained on device."
           "true | false",
@@ -116,18 +112,6 @@ int Flags::InitQuantType() {
     this->quantType = QuantType_QUANT_NONE;
   } else {
     std::cerr << "INPUT ILLEGAL: quantType must be WeightQuant|PostTraining";
-    return RET_INPUT_PARAM_INVALID;
-  }
-  return RET_OK;
-}
-
-int Flags::InitHuffmanCode() {
-  if (this->enableHuffmanCodeIn == "true") {
-    this->enableHuffmanCode = true;
-  } else if (this->enableHuffmanCodeIn == "false") {
-    this->enableHuffmanCode = false;
-  } else {
-    std::cerr << "INPUT ILLEGAL: trainModel must be true|false ";
     return RET_INPUT_PARAM_INVALID;
   }
   return RET_OK;
@@ -221,12 +205,6 @@ int Flags::Init(int argc, const char **argv) {
   ret = InitQuantType();
   if (ret != RET_OK) {
     std::cerr << "Init quant type failed.";
-    return RET_INPUT_PARAM_INVALID;
-  }
-
-  ret = InitHuffmanCode();
-  if (ret != RET_OK) {
-    std::cerr << "Init huffman code failed.";
     return RET_INPUT_PARAM_INVALID;
   }
 

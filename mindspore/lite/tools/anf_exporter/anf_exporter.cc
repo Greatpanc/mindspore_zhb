@@ -462,7 +462,6 @@ int AnfExporter::ConvertInputCNode(const std::shared_ptr<AnfNode> &input_anode, 
 }
 
 int AnfExporter::ConvertInputParameter(const std::shared_ptr<AnfNode> &input_anode,
-                                       const std::shared_ptr<PrimitiveC> &primitive_c,
                                        const std::unique_ptr<schema::MetaGraphT> &meta_graphT,
                                        schema::CNodeT *output_cnode) {
   auto paramNode = input_anode->cast<ParameterPtr>();
@@ -508,9 +507,6 @@ int AnfExporter::ConvertInputParameter(const std::shared_ptr<AnfNode> &input_ano
   }
 
   paramTensor->name = input_name;
-  if (primitive_c->IsEnableHuffmanCode() && paramTensor->dataType == kNumberTypeInt8) {
-    paramTensor->enableHuffmanCode = true;
-  }
   node_id_map_[input_name] = meta_graphT->allTensors.size();
   output_cnode->inputIndex.emplace_back(meta_graphT->allTensors.size());
   meta_graphT->allTensors.emplace_back(std::move(paramTensor));
@@ -701,11 +697,6 @@ int AnfExporter::SetOpInputNode(const CNodePtr &cnode, const std::unique_ptr<sch
   if (cnode->inputs().size() <= 1) {
     return RET_OK;
   }
-  auto primitive_c = GetValueNode<std::shared_ptr<PrimitiveC>>(cnode->input(0));
-  if (primitive_c == nullptr) {
-    MS_LOG(ERROR) << "primitive_c is nullptr: " << cnode->fullname_with_scope();
-    return RET_ERROR;
-  }
   bool is_graph_input = false;
   for (size_t i = 1; i < cnode->inputs().size(); i++) {
     auto input_node = cnode->input(i);
@@ -716,7 +707,7 @@ int AnfExporter::SetOpInputNode(const CNodePtr &cnode, const std::unique_ptr<sch
         return ret;
       }
     } else if (input_node->isa<Parameter>()) {
-      auto ret = ConvertInputParameter(input_node, primitive_c, meta_graphT, fb_node);
+      auto ret = ConvertInputParameter(input_node, meta_graphT, fb_node);
       if (ret != RET_OK) {
         MS_LOG(ERROR) << "ConvertInputParameter failed";
         return ret;
