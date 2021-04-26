@@ -181,6 +181,8 @@ STATUS FormatTransPass::DoNodeInoutFormatTrans(schema::MetaGraphT *graph) {
     } else if (IsContain(GetNhwcAllInputOpList(), op_type)) {
       auto input_size = node->inputIndex.size();
       if (GetCNodeTType(**iter) == schema::PrimitiveType_ResizeGrad) {
+        MS_ASSERT((**iter).primitive != nullptr);
+        MS_ASSERT((**iter).primitive->value.AsResizeGrad() != nullptr);
         if ((**iter).primitive->value.AsResizeGrad()->method == schema::ResizeMethod_NEAREST) {
           input_size = 1;
         }
@@ -264,14 +266,19 @@ NodeIter FormatTransPass::InsertFormatTransNode(schema::MetaGraphT *graph, NodeI
 }
 
 int FormatTransPass::GetFormat(const schema::CNodeT &node) {
+  MS_ASSERT(node.primitive != nullptr);
   switch (node.primitive->value.type) {
     case schema::PrimitiveType_Conv2DFusion:
+      MS_ASSERT(node.primitive->value.AsConv2DFusion() != nullptr);
       return node.primitive->value.AsConv2DFusion()->format;
     case schema::PrimitiveType_Conv2dTransposeFusion:
+      MS_ASSERT(node.primitive->value.AsConv2dTransposeFusion() != nullptr);
       return node.primitive->value.AsConv2dTransposeFusion()->format;
     case schema::PrimitiveType_AvgPoolFusion:
+      MS_ASSERT(node.primitive->value.AsAvgPoolFusion() != nullptr);
       return node.primitive->value.AsAvgPoolFusion()->format;
     case schema::PrimitiveType_MaxPoolFusion:
+      MS_ASSERT(node.primitive->value.AsMaxPoolFusion() != nullptr);
       return node.primitive->value.AsMaxPoolFusion()->format;
     default:
       return schema::Format_NHWC;
@@ -315,6 +322,8 @@ STATUS FormatTransPass::ChangeOpAxis(schema::MetaGraphT *graph, const std::uniqu
     node->primitive->value.AsSplit()->axis = axis_map[origin_axis];
   }
   if (type == schema::PrimitiveType_Crop) {
+    MS_ASSERT(node != nullptr);
+    MS_ASSERT(node->primitive != nullptr);
     MS_ASSERT(node->primitive->value.AsCrop() != nullptr);
     auto origin_axis = node->primitive->value.AsCrop()->axis;
     auto offsets = node->primitive->value.AsCrop()->offsets;
