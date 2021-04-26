@@ -56,6 +56,8 @@ class RegistryInferShape {
   RegistryInferShape(int prim_type, InferShape func) {
     InferManager::GetInstance()->InsertInferShapeFunc(prim_type, func);
   }
+
+  virtual ~RegistryInferShape() = default;
 };
 
 #define REG_INFER_SHAPE(op, prim_type, func) static RegistryInferShape g_##op##InferShape(prim_type, func);
