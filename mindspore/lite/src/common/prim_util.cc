@@ -68,6 +68,7 @@ int GetPartialGraphIndex(const void *primitive) {
   int index = -1;
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
+    MS_ASSERT(static_cast<const schema::Primitive *>(primitive)->value_as_PartialFusion() != nullptr);
     index = static_cast<const schema::Primitive *>(primitive)->value_as_PartialFusion()->sub_graph_index();
   }
 #ifdef ENABLE_V0
@@ -95,10 +96,12 @@ int GetWhileBodySubgraphIndex(const void *primitive) {
   int index = -1;
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
+    MS_ASSERT(static_cast<const schema::Primitive *>(primitive)->value_as_While() != nullptr);
     index = reinterpret_cast<const schema::Primitive *>(primitive)->value_as_While()->body_subgraph_index();
   }
 #ifdef ENABLE_V0
   if (schema_version == SCHEMA_V0) {
+    MS_ASSERT(static_cast<const schema::Primitive *>(primitive)->value_as_While() != nullptr);
     index = reinterpret_cast<const schema::v0::Primitive *>(primitive)->value_as_While()->bodySubgraphIndex();
   }
 #endif
@@ -109,10 +112,12 @@ int GetWhileCondSubgraphIndex(const void *primitive) {
   int index = -1;
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
+    MS_ASSERT(static_cast<const schema::Primitive *>(primitive)->value_as_While() != nullptr);
     index = reinterpret_cast<const schema::Primitive *>(primitive)->value_as_While()->cond_subgraph_index();
   }
 #ifdef ENABLE_V0
   if (schema_version == SCHEMA_V0) {
+    MS_ASSERT(static_cast<const schema::Primitive *>(primitive)->value_as_While() != nullptr);
     index = reinterpret_cast<const schema::v0::Primitive *>(primitive)->value_as_While()->condSubgraphIndex();
   }
 #endif
