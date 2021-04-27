@@ -144,7 +144,8 @@ void Conv2DOpenCLKernel::BuildKernel() {
     kernel_name << "_Img";
   }
   ocl_runtime_->LoadSource(program_name, GetActDefines() + conv2d_source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name.str());
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name.str(), build_options_ext);
 }
 
 void Conv2DOpenCLKernel::SetBlockSize() {

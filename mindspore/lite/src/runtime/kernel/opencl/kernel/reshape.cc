@@ -73,18 +73,14 @@ void ReshapeOpenCLKernel::SetGlobalLocal() {
 
 int ReshapeOpenCLKernel::Prepare() {
   std::string kernel_name = "reshape_NHWC4";
-  if (desc_.data_type == kNumberTypeInt32) {
-    kernel_name += "_int";
-  } else {
-    kernel_name += "_float";
-  }
 #ifdef PROGRAM_WITH_IL
   kernel_ = ocl_runtime_->GetKernelFromBinary(kernel_name);
 #else
   std::string source = reshape_source;
   std::string program_name = "reshape";
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, {});
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
 
   SetGlobalLocal();

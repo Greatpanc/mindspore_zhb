@@ -165,7 +165,8 @@ int StackOpenCLKernel::Prepare() {
   std::string source = stack_source;
   std::string program_name = "stack";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
   SetConstArgs();
   SetGlobalLocal();
 

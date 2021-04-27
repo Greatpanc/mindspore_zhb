@@ -74,7 +74,8 @@ int PadOpenCLKernel::Prepare() {
   const std::string source = pad_source;
   const std::string program_name = "Pad";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, "Pad");
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, "Pad", build_options_ext);
   SetConstArgs();
   return RET_OK;
 }

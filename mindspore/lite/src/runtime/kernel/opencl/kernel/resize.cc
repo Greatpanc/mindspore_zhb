@@ -70,7 +70,8 @@ int ResizeOpenCLKernel::Prepare() {
   std::string source = resize_source;
   std::string program_name = "Resize";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
   SetConstArgs();
   SetGlobalLocal();

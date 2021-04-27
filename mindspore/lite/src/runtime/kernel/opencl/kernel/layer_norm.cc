@@ -171,9 +171,10 @@ int LayerNormOpenCLKernel::Prepare() {
   std::string source = layer_norm_source;
   std::string program_name = "LayerNormalization";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
   kernel_name_mean_var += "Axis" + std::to_string(normalized_axis_) + "NHWC4";
-  ocl_runtime_->BuildKernel(kernel_mean_var_, program_name, kernel_name_mean_var);
+  ocl_runtime_->BuildKernel(kernel_mean_var_, program_name, kernel_name_mean_var, build_options_ext);
   MS_LOG(DEBUG) << kernel_name << " Init Done!";
   SetConstArgs();
   SetGlobalLocal();

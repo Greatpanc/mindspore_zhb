@@ -100,7 +100,8 @@ int SpaceToBatchNDOpenCLKernel::Prepare() {
   std::string source = space_to_batch_nd_source;
   std::string program_name = "space_to_batch_nd";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
 
   SetGlobalLocal();

@@ -130,7 +130,8 @@ int PReluOpenCLKernel::Prepare() {
   std::string program_name = "PRelu";
   std::string kernel_name = "PRelu_" + std::string(weight_is_scalar ? "scalar" : "vector");
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
   InitWeights();
   MS_LOG(DEBUG) << program_name << " init Done!";
   MS_LOG(DEBUG) << "kernel_name=: " << kernel_name << " init Done!";

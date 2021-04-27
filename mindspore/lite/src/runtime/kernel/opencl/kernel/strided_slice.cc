@@ -89,7 +89,8 @@ int StridedSliceOpenCLKernel::CheckSpecs() {
 int StridedSliceOpenCLKernel::Prepare() {
   std::string program_name = "strided_slice";
   ocl_runtime_->LoadSource(program_name, strided_slice_source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, "strided_slice");
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, "strided_slice", build_options_ext);
   SetConstArgs();
   SetGlobalLocal();
   return RET_OK;

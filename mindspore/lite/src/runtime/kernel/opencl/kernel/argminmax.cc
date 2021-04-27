@@ -149,7 +149,8 @@ int ArgMinMaxOpenCLKernel::Prepare() {
   std::string source = argminmax_source;
   std::string program_name = "argminmax";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
 
   auto *param = reinterpret_cast<ArgMinMaxParameter *>(this->op_parameter_);

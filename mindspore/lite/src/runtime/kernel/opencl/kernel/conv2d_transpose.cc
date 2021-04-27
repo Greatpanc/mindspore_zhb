@@ -65,7 +65,8 @@ int Conv2dTransposeOpenCLKernel::Prepare() {
   std::string source = GetActDefines() + conv2d_transpose_source;
   std::string program_name = "conv2d_transpose";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
   auto ret = InitWeights();
   if (ret != RET_OK) {

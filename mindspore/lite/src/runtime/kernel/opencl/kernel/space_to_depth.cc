@@ -58,7 +58,8 @@ int SpaceToDepthOpenCLKernel::Prepare() {
   std::string source = space_to_depth_source;
   std::string program_name = "SpaceToDepth";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
   SetConstArgs();
   SetGlobalLocal();

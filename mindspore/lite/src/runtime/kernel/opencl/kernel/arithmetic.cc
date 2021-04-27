@@ -191,7 +191,8 @@ int ArithmeticOpenCLKernel::Prepare() {
   std::string program_name = "Arithmetic";
   std::string source = arithmetic_source;
   ocl_runtime_->LoadSource(program_name, source);
-  int error_code = ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name_);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  int error_code = ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name_, build_options_ext);
 #endif
   if (error_code != RET_OK) {
     return error_code;

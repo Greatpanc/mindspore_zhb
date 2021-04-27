@@ -84,21 +84,19 @@ int TransposeOpenCLKernel::Prepare() {
     perm_4d_[2] = 2;
     perm_4d_[3] = 3;
   }
+  std::string kernel_name = "transpose";
+
   if (tensor_size_.N == 1 && perm_4d_[0] == 0 && perm_4d_[1] == 3 && perm_4d_[2] == 1 && perm_4d_[3] == 2) {
     type_ = TransposeType::AXIS0312;
+    kernel_name += "_0312";
   } else if (tensor_size_.N == 1 && perm_4d_[0] == 0 && perm_4d_[1] == 2 && perm_4d_[2] == 3 && perm_4d_[3] == 1) {
     type_ = TransposeType::AXIS0231;
-  } else {
-    type_ = TransposeType::GENERAL;
-  }
-  std::string kernel_name = "transpose";
-  if (type_ == TransposeType::AXIS0312) {
-    kernel_name += "_0312";
-  } else if (type_ == TransposeType::AXIS0231) {
     kernel_name += "_0231";
   } else {
+    type_ = TransposeType::GENERAL;
     kernel_name += "_general";
   }
+
   if (in_tensors_[0]->shape().size() == 4 &&
       in_tensors_[0]->shape()[2] * UP_DIV(in_tensors_[0]->shape()[3], C4NUM) > ocl_runtime_->GetMaxImage2DWidth()) {
     // just for input
@@ -112,7 +110,8 @@ int TransposeOpenCLKernel::Prepare() {
   std::string source = transpose_source;
   std::string program_name = "transpose";
   ocl_runtime_->LoadSource(program_name, source);
-  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name);
+  auto build_options_ext = CreateBuildOptionsExtByDType(desc_.data_type);
+  ocl_runtime_->BuildKernel(kernel_, program_name, kernel_name, build_options_ext);
 #endif
   SetConstArgs();
   SetGlobalLocal();
