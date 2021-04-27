@@ -24,6 +24,7 @@
 namespace mindspore {
 namespace lite {
 int GetPrimitiveType(const void *primitive) {
+  MS_ASSERT(primitive != nullptr);
   if (primitive == nullptr) {
     return -1;
   }
@@ -51,6 +52,7 @@ const char *PrimitiveCurVersionTypeName(int type) {
 int GenPrimVersionKey(int primitive_type, int schema_version) { return primitive_type * 1000 + schema_version; }
 
 bool IsPartialNode(const void *primitive) {
+  MS_ASSERT(primitive != nullptr);
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
     return reinterpret_cast<const schema::Primitive *>(primitive)->value_type() == schema::PrimitiveType_PartialFusion;
@@ -65,6 +67,7 @@ bool IsPartialNode(const void *primitive) {
 }
 
 int GetPartialGraphIndex(const void *primitive) {
+  MS_ASSERT(primitive != nullptr);
   int index = -1;
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
@@ -80,6 +83,7 @@ int GetPartialGraphIndex(const void *primitive) {
 }
 
 bool IsWhileNode(const void *primitive) {
+  MS_ASSERT(primitive != nullptr);
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
     return reinterpret_cast<const schema::Primitive *>(primitive)->value_type() == schema::PrimitiveType_While;
@@ -93,6 +97,7 @@ bool IsWhileNode(const void *primitive) {
 }
 
 int GetWhileBodySubgraphIndex(const void *primitive) {
+  MS_ASSERT(primitive != nullptr);
   int index = -1;
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
@@ -109,6 +114,7 @@ int GetWhileBodySubgraphIndex(const void *primitive) {
 }
 
 int GetWhileCondSubgraphIndex(const void *primitive) {
+  MS_ASSERT(primitive != nullptr);
   int index = -1;
   int schema_version = VersionManager::GetInstance()->GetSchemaVersion();
   if (schema_version == SCHEMA_CUR) {
