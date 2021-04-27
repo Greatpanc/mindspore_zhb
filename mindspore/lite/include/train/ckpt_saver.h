@@ -31,7 +31,7 @@ class CkptSaver : public session::TrainLoopCallBack {
  public:
   CkptSaver(int save_every_n, const std::string &filename_prefix, mindspore::lite::Model *model)
       : save_every_n_(save_every_n), filename_prefix_(filename_prefix), model_(model) {}
-
+  ~CkptSaver() = default;
   int EpochEnd(const session::TrainLoopCallBackData &cb_data) override {
     if ((cb_data.epoch_ + 1) % save_every_n_ == 0) {
       auto cpkt_fn = filename_prefix_ + "_trained_" + std::to_string(cb_data.epoch_ + 1) + ".ms";
