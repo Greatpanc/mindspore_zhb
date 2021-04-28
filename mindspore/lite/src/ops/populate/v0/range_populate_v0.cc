@@ -23,13 +23,9 @@ namespace lite {
 namespace {
 OpParameter *PopulateRangeParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto range_prim = primitive->value_as_Range();
-  if (range_prim == nullptr) {
-    MS_LOG(ERROR) << "range_prim is nullptr";
-    return nullptr;
-  }
-  auto *range_param = reinterpret_cast<RangeParameter *>(malloc(sizeof(RangeParameter)));
+
+  RangeParameter *range_param = reinterpret_cast<RangeParameter *>(malloc(sizeof(RangeParameter)));
   if (range_param == nullptr) {
     MS_LOG(ERROR) << "malloc RangeParameter failed.";
     return nullptr;

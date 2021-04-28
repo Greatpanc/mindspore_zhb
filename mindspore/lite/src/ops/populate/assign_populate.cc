@@ -19,7 +19,7 @@ using mindspore::schema::PrimitiveType_Assign;
 namespace mindspore {
 namespace lite {
 OpParameter *PopulateAssignParameter(const void *prim) {
-  auto *param = reinterpret_cast<OpParameter *>(malloc(sizeof(OpParameter)));
+  OpParameter *param = reinterpret_cast<OpParameter *>(malloc(sizeof(OpParameter)));
   if (param == nullptr) {
     MS_LOG(ERROR) << "malloc Assign Parameter failed.";
     return nullptr;
@@ -27,7 +27,6 @@ OpParameter *PopulateAssignParameter(const void *prim) {
   memset(param, 0, sizeof(OpParameter));
 
   auto primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   param->type_ = primitive->value_type();
   return param;
 }

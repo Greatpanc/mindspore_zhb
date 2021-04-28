@@ -23,13 +23,9 @@ namespace lite {
 namespace {
 OpParameter *PopulateLshProjectionParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto lsh_projection_prim = primitive->value_as_LshProjection();
-  if (lsh_projection_prim == nullptr) {
-    MS_LOG(ERROR) << "lsh_projection_prim is nullptr";
-    return nullptr;
-  }
-  auto *lsh_project_param = reinterpret_cast<LshProjectionParameter *>(malloc(sizeof(LshProjectionParameter)));
+  LshProjectionParameter *lsh_project_param =
+    reinterpret_cast<LshProjectionParameter *>(malloc(sizeof(LshProjectionParameter)));
   if (lsh_project_param == nullptr) {
     MS_LOG(ERROR) << "malloc LshProjectionParameter failed.";
     return nullptr;

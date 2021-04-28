@@ -18,8 +18,9 @@
 using mindspore::schema::PrimitiveType_DivFusion;
 namespace mindspore {
 namespace lite {
+
 OpParameter *PopulateDivParameter(const void *prim) {
-  auto *param = PopulateArithmeticCommonPara(prim);
+  ArithmeticParameter *param = PopulateArithmeticCommonPara(prim);
   if (param == nullptr) {
     MS_LOG(ERROR) << "PopulateArithmeticCommonPara failed.";
     return nullptr;

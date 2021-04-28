@@ -21,14 +21,13 @@ namespace mindspore {
 namespace lite {
 namespace {
 OpParameter *PopulateBiasAddParameter(const void *prim) {
-  auto *arithmetic_param = reinterpret_cast<ArithmeticParameter *>(malloc(sizeof(ArithmeticParameter)));
+  ArithmeticParameter *arithmetic_param = reinterpret_cast<ArithmeticParameter *>(malloc(sizeof(ArithmeticParameter)));
   if (arithmetic_param == nullptr) {
     MS_LOG(ERROR) << "malloc ArithmeticParameter failed.";
     return nullptr;
   }
   memset(arithmetic_param, 0, sizeof(ArithmeticParameter));
-  auto *primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
+  const schema::Primitive *primitive = static_cast<const schema::Primitive *>(prim);
   arithmetic_param->op_parameter_.type_ = primitive->value_type();
 
   return reinterpret_cast<OpParameter *>(arithmetic_param);

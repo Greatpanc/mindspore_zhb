@@ -27,13 +27,8 @@ typedef struct PartialParameter {
 
 OpParameter *PopulatePartialParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto partial_prim = primitive->value_as_Partial();
-  if (partial_prim == nullptr) {
-    MS_LOG(ERROR) << "partial_prim is nullptr";
-    return nullptr;
-  }
-  auto *partial_parameter = reinterpret_cast<PartialParameter *>(malloc(sizeof(PartialParameter)));
+  PartialParameter *partial_parameter = reinterpret_cast<PartialParameter *>(malloc(sizeof(PartialParameter)));
   if (partial_parameter == nullptr) {
     MS_LOG(ERROR) << "malloc partial parameter failed.";
     return nullptr;

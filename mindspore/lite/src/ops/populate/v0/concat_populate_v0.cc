@@ -23,13 +23,8 @@ namespace lite {
 namespace {
 OpParameter *PopulateConcatParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto concat_prim = primitive->value_as_Concat();
-  if (concat_prim == nullptr) {
-    MS_LOG(ERROR) << "concat_prim is nullptr";
-    return nullptr;
-  }
-  auto *concat_param = reinterpret_cast<ConcatParameter *>(malloc(sizeof(ConcatParameter)));
+  ConcatParameter *concat_param = reinterpret_cast<ConcatParameter *>(malloc(sizeof(ConcatParameter)));
   if (concat_param == nullptr) {
     MS_LOG(ERROR) << "malloc ConcatParameter failed.";
     return nullptr;

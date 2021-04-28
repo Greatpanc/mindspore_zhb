@@ -19,20 +19,16 @@ using mindspore::schema::PrimitiveType_SkipGram;
 
 namespace mindspore {
 namespace lite {
+
 OpParameter *PopulateSkipGramParameter(const void *prim) {
-  auto *skipGramParameter = reinterpret_cast<SkipGramParameter *>(malloc(sizeof(SkipGramParameter)));
+  SkipGramParameter *skipGramParameter = reinterpret_cast<SkipGramParameter *>(malloc(sizeof(SkipGramParameter)));
   if (skipGramParameter == nullptr) {
     MS_LOG(ERROR) << "malloc SkipGramParameter failed.";
     return nullptr;
   }
   memset(skipGramParameter, 0, sizeof(SkipGramParameter));
   auto primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto value = primitive->value_as_SkipGram();
-  if (value == nullptr) {
-    MS_LOG(ERROR) << "value is nullptr";
-    return nullptr;
-  }
   skipGramParameter->op_parameter_.type_ = primitive->value_type();
   skipGramParameter->ngram_size = value->ngram_size();
   skipGramParameter->max_skip_size = value->max_skip_size();

@@ -24,7 +24,6 @@ namespace lite {
 namespace {
 OpParameter *PopulateSquaredDifferenceParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   ArithmeticParameter *param = PopulateArithmeticV0CommonPara(primitive);
   if (param == nullptr) {
     MS_LOG(ERROR) << "PopulateArithmeticCommonPara failed.";

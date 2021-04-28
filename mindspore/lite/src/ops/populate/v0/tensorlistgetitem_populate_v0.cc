@@ -23,13 +23,8 @@ namespace lite {
 namespace {
 OpParameter *PopulateTensorListGetItemParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto tensorList_prim = primitive->value_as_TensorListGetItem();
-  if (tensorList_prim == nullptr) {
-    MS_LOG(ERROR) << "tensorList_prim is nullptr";
-    return nullptr;
-  }
-  auto *getItem_param = reinterpret_cast<TensorListParameter *>(malloc(sizeof(TensorListParameter)));
+  TensorListParameter *getItem_param = reinterpret_cast<TensorListParameter *>(malloc(sizeof(TensorListParameter)));
   if (getItem_param == nullptr) {
     MS_LOG(ERROR) << "malloc TensorListParameter failed.";
     return nullptr;

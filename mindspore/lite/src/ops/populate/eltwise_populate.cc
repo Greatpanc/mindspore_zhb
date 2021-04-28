@@ -27,13 +27,7 @@ OpParameter *PopulateEltwiseParameter(const void *prim) {
     return nullptr;
   }
   auto primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
-  auto eltwise_param = primitive->value_as_Eltwise();
-  if (eltwise_param == nullptr) {
-    MS_LOG(ERROR) << "eltwise_param is nullptr";
-    return nullptr;
-  }
-  param->eltwise_mode_ = eltwise_param->mode();
+  param->eltwise_mode_ = primitive->value_as_Eltwise()->mode();
   return reinterpret_cast<OpParameter *>(param);
 }
 }  // namespace

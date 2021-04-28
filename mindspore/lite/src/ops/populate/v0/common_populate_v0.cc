@@ -27,9 +27,7 @@ OpParameter *PopulateCommonParameter(const void *prim) {
     return nullptr;
   }
   memset(common_parameter, 0, sizeof(OpParameter));
-  auto *primitive = reinterpret_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
-  auto type = primitive->value_type();
+  auto type = reinterpret_cast<const schema::v0::Primitive *>(prim)->value_type();
   if (type == schema::v0::PrimitiveType_ZerosLike) {
     common_parameter->type_ = schema::PrimitiveType_ZerosLike;
   } else {

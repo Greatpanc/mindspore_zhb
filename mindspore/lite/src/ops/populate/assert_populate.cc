@@ -20,14 +20,13 @@ namespace mindspore {
 namespace lite {
 
 OpParameter *PopulateAssertParameter(const void *prim) {
-  auto *assert_parameter = reinterpret_cast<OpParameter *>(malloc(sizeof(OpParameter)));
+  OpParameter *assert_parameter = reinterpret_cast<OpParameter *>(malloc(sizeof(OpParameter)));
   if (assert_parameter == nullptr) {
     MS_LOG(ERROR) << "malloc AssertParameter failed.";
     return nullptr;
   }
   memset(assert_parameter, 0, sizeof(OpParameter));
   auto primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   assert_parameter->type_ = primitive->value_type();
 
   return reinterpret_cast<OpParameter *>(assert_parameter);

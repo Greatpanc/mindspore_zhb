@@ -28,13 +28,8 @@ typedef struct WhileParemeter {
 
 OpParameter *PopulateWhileParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto while_prim = primitive->value_as_While();
-  if (while_prim == nullptr) {
-    MS_LOG(ERROR) << "while_prim is nullptr";
-    return nullptr;
-  }
-  auto *while_paremeter = reinterpret_cast<WhileParemeter *>(malloc(sizeof(WhileParemeter)));
+  WhileParemeter *while_paremeter = reinterpret_cast<WhileParemeter *>(malloc(sizeof(WhileParemeter)));
   if (while_paremeter == nullptr) {
     MS_LOG(ERROR) << "malloc WhileParemeter failed.";
     return nullptr;

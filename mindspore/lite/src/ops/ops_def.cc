@@ -321,12 +321,12 @@ OP_SCHEMA_DEF_END(BatchNormGrad)
 
 OP_SCHEMA_DEF(BatchToSpace)
 OP_ATTR(block_size, [long])
-OP_ATTR_VEC2D(crops, Vec2D)
+OP_ATTR_VEC2D(crops, Vec2D);
 OP_SCHEMA_DEF_END(BatchToSpace)
 
 OP_SCHEMA_DEF(BatchToSpaceND)
 OP_ATTR(block_shape, [long])
-OP_ATTR_VEC2D(crops, Vec2D)
+OP_ATTR_VEC2D(crops, Vec2D);
 OP_SCHEMA_DEF_END(BatchToSpaceND)
 
 OP_SCHEMA_DEF(BiasAdd)
@@ -451,16 +451,16 @@ OP_ATTR(weight_threshold, float)
 OP_SCHEMA_DEF_END(CustomPredict)
 
 OP_SCHEMA_DEF(DeConv2DGradFilter)
-OP_ATTR(in_channel, long)
-OP_ATTR(out_channel, long)
-OP_ATTR(kernel_size, [long])
-OP_ATTR_ENUM(pad_mode, PadMode)
-OP_ATTR(pad_list, [long])
-OP_ATTR(stride, [long])
-OP_ATTR(dilation, [long])
-OP_ATTR(group, long)
-OP_ATTR_ENUM(format, Format)
-OP_ATTR_ENUM(activation_type, ActivationType)
+OP_ATTR(in_channel, long);
+OP_ATTR(out_channel, long);
+OP_ATTR(kernel_size, [long]);
+OP_ATTR_ENUM(pad_mode, PadMode);
+OP_ATTR(pad_list, [long]);
+OP_ATTR(stride, [long]);
+OP_ATTR(dilation, [long]);
+OP_ATTR(group, long);
+OP_ATTR_ENUM(format, Format);
+OP_ATTR_ENUM(activation_type, ActivationType);
 OP_SCHEMA_DEF_END(DeConv2DGradFilter)
 
 OP_SCHEMA_DEF(Depend)
@@ -737,7 +737,7 @@ OP_SCHEMA_DEF(OnesLike)
 OP_SCHEMA_DEF_END(OnesLike)
 
 OP_SCHEMA_DEF(PadFusion)
-OP_ATTR_VEC2D(paddings, Vec2D)
+OP_ATTR_VEC2D(paddings, Vec2D);
 OP_ATTR_ENUM(padding_mode, PaddingMode)
 OP_ATTR(constant_value, float)
 OP_SCHEMA_DEF_END(PadFusion)
@@ -897,12 +897,12 @@ OP_SCHEMA_DEF_END(SoftmaxCrossEntropyWithLogits)
 
 OP_SCHEMA_DEF(SpaceToBatch)
 OP_ATTR(block_size, [long])
-OP_ATTR_VEC2D(paddings, Vec2D)
+OP_ATTR_VEC2D(paddings, Vec2D);
 OP_SCHEMA_DEF_END(SpaceToBatch)
 
 OP_SCHEMA_DEF(SpaceToBatchND)
 OP_ATTR(block_shape, [long])
-OP_ATTR_VEC2D(paddings, Vec2D)
+OP_ATTR_VEC2D(paddings, Vec2D);
 OP_SCHEMA_DEF_END(SpaceToBatchND)
 
 OP_SCHEMA_DEF(SpaceToDepth)

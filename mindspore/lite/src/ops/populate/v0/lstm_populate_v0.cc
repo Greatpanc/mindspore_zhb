@@ -23,13 +23,8 @@ namespace lite {
 namespace {
 OpParameter *PopulateLstmParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto lstm_prim = primitive->value_as_Lstm();
-  if (lstm_prim == nullptr) {
-    MS_LOG(ERROR) << "lstm_prim is nullptr";
-    return nullptr;
-  }
-  auto *lstm_param = reinterpret_cast<LstmParameter *>(malloc(sizeof(LstmParameter)));
+  LstmParameter *lstm_param = reinterpret_cast<LstmParameter *>(malloc(sizeof(LstmParameter)));
   if (lstm_param == nullptr) {
     MS_LOG(ERROR) << "malloc LstmParameter failed.";
     return nullptr;
@@ -37,6 +32,11 @@ OpParameter *PopulateLstmParameter(const void *prim) {
   memset(lstm_param, 0, sizeof(LstmParameter));
   lstm_param->op_parameter_.type_ = schema::PrimitiveType_LSTM;
 
+  if (lstm_prim == nullptr) {
+    free(lstm_param);
+    MS_LOG(ERROR) << "get Lstm param nullptr.";
+    return nullptr;
+  }
   lstm_param->bidirectional_ = lstm_prim->bidirection();
   return reinterpret_cast<OpParameter *>(lstm_param);
 }

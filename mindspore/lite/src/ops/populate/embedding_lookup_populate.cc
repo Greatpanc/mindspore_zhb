@@ -21,7 +21,8 @@ namespace mindspore {
 namespace lite {
 
 OpParameter *PopulateEmbeddingLookupParameter(const void *prim) {
-  auto *param = reinterpret_cast<EmbeddingLookupParameter *>(malloc(sizeof(EmbeddingLookupParameter)));
+  EmbeddingLookupParameter *param =
+    reinterpret_cast<EmbeddingLookupParameter *>(malloc(sizeof(EmbeddingLookupParameter)));
   if (param == nullptr) {
     MS_LOG(ERROR) << "malloc EmbeddingLookupParameter failed.";
     return nullptr;
@@ -29,12 +30,7 @@ OpParameter *PopulateEmbeddingLookupParameter(const void *prim) {
   memset(param, 0, sizeof(EmbeddingLookupParameter));
 
   auto primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto value = primitive->value_as_EmbeddingLookupFusion();
-  if (value == nullptr) {
-    MS_LOG(ERROR) << "value is nullptr";
-    return nullptr;
-  }
   param->op_parameter_.type_ = primitive->value_type();
   param->max_norm_ = value->max_norm();
   if (param->max_norm_ < 0) {

@@ -19,8 +19,10 @@ using mindspore::schema::PrimitiveType_LshProjection;
 
 namespace mindspore {
 namespace lite {
+
 OpParameter *PopulateLshProjectionParameter(const void *prim) {
-  auto *lsh_project_param = reinterpret_cast<LshProjectionParameter *>(malloc(sizeof(LshProjectionParameter)));
+  LshProjectionParameter *lsh_project_param =
+    reinterpret_cast<LshProjectionParameter *>(malloc(sizeof(LshProjectionParameter)));
   if (lsh_project_param == nullptr) {
     MS_LOG(ERROR) << "malloc LshProjectionParameter failed.";
     return nullptr;
@@ -28,12 +30,7 @@ OpParameter *PopulateLshProjectionParameter(const void *prim) {
   memset(lsh_project_param, 0, sizeof(LshProjectionParameter));
 
   auto primitive = static_cast<const schema::Primitive *>(prim);
-  MS_ASSERT(primitive != nullptr);
   auto value = primitive->value_as_LshProjection();
-  if (value == nullptr) {
-    MS_LOG(ERROR) << "value is nullptr";
-    return nullptr;
-  }
   lsh_project_param->op_parameter_.type_ = primitive->value_type();
   lsh_project_param->lsh_type_ = value->type();
   return reinterpret_cast<OpParameter *>(lsh_project_param);

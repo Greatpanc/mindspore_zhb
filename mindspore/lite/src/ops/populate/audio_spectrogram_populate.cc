@@ -21,7 +21,8 @@ namespace mindspore {
 namespace lite {
 namespace {
 OpParameter *PopulateAudioSpectrogramParameter(const void *prim) {
-  auto *arg_param = reinterpret_cast<AudioSpectrogramParameter *>(malloc(sizeof(AudioSpectrogramParameter)));
+  AudioSpectrogramParameter *arg_param =
+    reinterpret_cast<AudioSpectrogramParameter *>(malloc(sizeof(AudioSpectrogramParameter)));
   if (arg_param == nullptr) {
     MS_LOG(ERROR) << "malloc AudioSpectrogramParameter failed.";
     return nullptr;
@@ -30,10 +31,6 @@ OpParameter *PopulateAudioSpectrogramParameter(const void *prim) {
   auto *primitive = static_cast<const schema::Primitive *>(prim);
   arg_param->op_parameter_.type_ = primitive->value_type();
   auto param = primitive->value_as_AudioSpectrogram();
-  if (param == nullptr) {
-    MS_LOG(ERROR) << "param is nullptr";
-    return nullptr;
-  }
   arg_param->window_size_ = param->window_size();
   arg_param->stride_ = param->stride();
   return reinterpret_cast<OpParameter *>(arg_param);
