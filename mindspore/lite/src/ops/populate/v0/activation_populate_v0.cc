@@ -25,10 +25,6 @@ OpParameter *PopulateActivationParameter(const void *prim) {
   auto *primitive = static_cast<const schema::v0::Primitive *>(prim);
   MS_ASSERT(primitive != nullptr);
   auto activation_prim = primitive->value_as_Activation();
-  if (param == nullptr) {
-    MS_LOG(ERROR) << "param is nullptr";
-    return nullptr;
-  }
   if (activation_prim == nullptr) {
     MS_LOG(ERROR) << "activation_prim is nullptr";
     return nullptr;
