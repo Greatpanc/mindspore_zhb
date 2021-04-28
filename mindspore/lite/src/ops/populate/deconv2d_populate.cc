@@ -40,8 +40,7 @@ OpParameter *PopulateDeconvParameter(const void *prim) {
   auto pad_list = conv_primitive->pad_list();
   auto dilation = conv_primitive->dilation();
   auto output_paddings = conv_primitive->output_paddings();
-  if (kernel_size == nullptr || stride == nullptr || dilation == nullptr || pad_list == nullptr ||
-      output_paddings == nullptr) {
+  if (kernel_size == nullptr || stride == nullptr || dilation == nullptr || output_paddings == nullptr) {
     MS_LOG(ERROR) << "nullptr";
     return nullptr;
   }

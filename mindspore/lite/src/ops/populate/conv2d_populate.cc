@@ -40,7 +40,7 @@ OpParameter *PopulateConvParameter(const void *prim) {
   auto stride = conv_primitive->stride();
   auto pad_list = conv_primitive->pad_list();
   auto dilation = conv_primitive->dilation();
-  if (kernel_size == nullptr || stride == nullptr || dilation == nullptr || pad_list == nullptr) {
+  if (kernel_size == nullptr || stride == nullptr || dilation == nullptr) {
     MS_LOG(ERROR) << "nullptr";
     return nullptr;
   }
