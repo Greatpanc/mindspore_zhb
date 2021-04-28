@@ -207,6 +207,10 @@ union PrimitiveType {
     ResizeGrad,
     Splice,
     LogSoftmax,
+    Call,
+    CumSum,
+    Custom,
+    CumSum,
 }
 
 table Abs {
@@ -438,6 +442,11 @@ table ConstantOfShape {
 table Crop {
     axis: long;
     offsets: [long];
+}
+
+table CumSum {
+    exclusive: bool = false;
+    reverse: bool = false;
 }
 
 table CustomExtractFeatures {
@@ -1098,4 +1107,12 @@ table Splice {
 
 table LogSoftmax {
     axis: long;
+}
+
+table Call {
+}
+
+table Custom {
+    type: string;
+    attr: [Attribute];
 }

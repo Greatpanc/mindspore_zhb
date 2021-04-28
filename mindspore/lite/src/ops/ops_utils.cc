@@ -755,6 +755,16 @@ schema::PrimitiveT *LogSoftmaxPrimitiveCreator(const AnfNodePtr &node) {
   return ms_primc != nullptr ? ops::MSOp2SchemaOp(ms_primc.get()) : nullptr;
 }
 
+schema::PrimitiveT *CallPrimitiveCreator(const AnfNodePtr &node) {
+  auto ms_primc = GetValueNode<std::shared_ptr<mindspore::ops::Call>>(node);
+  return ms_primc != nullptr ? ops::MSOp2SchemaOp(ms_primc.get()) : nullptr;
+}
+
+schema::PrimitiveT *CumSumPrimitiveCreator(const AnfNodePtr &node) {
+  auto ms_primc = GetValueNode<std::shared_ptr<mindspore::ops::CumSum>>(node);
+  return ms_primc != nullptr ? ops::MSOp2SchemaOp(ms_primc.get()) : nullptr;
+}
+
 RegistryMSOps g_absPrimitiveCreatorRegistry("Abs", AbsPrimitiveCreator);
 RegistryMSOps g_absGradPrimitiveCreatorRegistry("AbsGrad", AbsGradPrimitiveCreator);
 RegistryMSOps g_activationPrimitiveCreatorRegistry("Activation", ActivationPrimitiveCreator);
@@ -969,6 +979,41 @@ RegistryMSOps g_zerosLikePrimitiveCreatorRegistry("ZerosLike", ZerosLikePrimitiv
 RegistryMSOps g_erfPrimitiveCreatorRegistry("Erf", ErfPrimitiveCreator);
 RegistryMSOps g_SplicePrimitiveCreatorRegistry("Splice", SplicePrimitiveCreator);
 RegistryMSOps g_LogSoftmaxPrimitiveCreatorRegistry("LogSoftmax", LogSoftmaxPrimitiveCreator);
+RegistryMSOps g_CallPrimitiveCreatorRegistry("call", CallPrimitiveCreator);
+RegistryMSOps g_CumSumPrimitiveCreatorRegistry("CumSum", CumSumPrimitiveCreator);
+
+schema::PrimitiveT *CustomPrimitiveCreator(const AnfNodePtr &node) {
+  auto ms_primc = GetValueNode<std::shared_ptr<mindspore::ops::Custom>>(node);
+  auto *schema_op = new (std::nothrow) schema::CustomT();
+  if (schema_op == nullptr) {
+    return nullptr;
+  }
+  if (ms_primc->GetAttr("type") != nullptr) {
+    schema_op->type = ms_primc->get_type();
+  }
+  if (ms_primc->GetAttr("attr") != nullptr) {
+    auto attr_map = ms_primc->get_attr();
+    for (const auto &attr_item : attr_map) {
+      auto *attr = new (std::nothrow) schema::AttributeT();
+      if (attr == nullptr) {
+        return nullptr;
+      }
+      attr->name = attr_item.first;
+      attr->data = attr_item.second;
+      schema_op->attr.emplace_back(attr);
+    }
+  }
+
+  auto *prim = new (std::nothrow) schema::PrimitiveT();
+  if (prim == nullptr) {
+    return nullptr;
+  }
+  prim->value.value = schema_op;
+  prim->value.type = schema::PrimitiveType_Custom;
+  return prim;
+}
+
+RegistryMSOps g_CustomPrimitiveCreatorRegistry("Custom", CustomPrimitiveCreator);
 }  // namespace lite
 }  // namespace mindspore
 

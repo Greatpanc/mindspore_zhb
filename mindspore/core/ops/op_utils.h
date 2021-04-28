@@ -31,6 +31,7 @@ constexpr auto kActivation = "activation";
 constexpr auto kActivationType = "activation_type";
 constexpr auto kAddress = "address";
 constexpr auto kAlignCorners = "align_corners";
+constexpr auto kAttr = "attr";
 constexpr auto kAspectRatios = "aspect_ratios";
 constexpr auto kAxes = "axes";
 constexpr auto kAxis = "axis";
@@ -230,6 +231,9 @@ constexpr auto kSpliceContext = "context";
 constexpr auto kSpliceForwardIndexes = "forward_indexes";
 constexpr auto kSpliceOutputDims = "output_dim";
 constexpr auto kSideEffectIO = "side_effect_io";
+constexpr auto kDeviceType = "device_type";
+constexpr auto kExclusive = "exclusive";
+constexpr auto kReverse = "reverse";
 const std::set<TypePtr> common_valid_types = {kInt8,   kInt16,  kInt32,   kInt64,   kUInt8,  kUInt16,
                                               kUInt32, kUInt64, kFloat16, kFloat32, kFloat64};
 
