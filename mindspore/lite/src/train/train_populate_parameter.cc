@@ -81,8 +81,11 @@ OpParameter *PopulateBCEParameter(const void *prim) {
     MS_LOG(ERROR) << "malloc reduction failed.";
     return nullptr;
   }
+  MS_ASSERT(prim != nullptr);
   auto primitive = static_cast<const schema::Primitive *>(prim);
+  MS_ASSERT(primitive->value_as_BinaryCrossEntropy() != nullptr);
   auto value = primitive->value_as_BinaryCrossEntropy();
+  MS_ASSERT(value != nullptr);
   *reduction = value->reduction();
   return reinterpret_cast<OpParameter *>(reduction);
 }

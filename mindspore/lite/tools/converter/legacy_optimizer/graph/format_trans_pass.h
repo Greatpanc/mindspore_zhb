@@ -49,7 +49,7 @@ class FormatTransPass : public GraphPass {
 
   STATUS DoNodeInoutFormatTrans(schema::MetaGraphT *graph);
 
-  void TransformAttrByAxes(int *origin_attr, int *axes, int element_size);
+  void TransformAttrByAxes(int *origin_attr, const int *axes, int element_size);
 
   void TransformOpAxisAttr(int *origin_axis, int element_size);
 

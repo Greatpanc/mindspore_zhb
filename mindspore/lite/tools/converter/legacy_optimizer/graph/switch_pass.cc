@@ -468,7 +468,10 @@ STATUS SingleSwitchPass::Init() {
   }
 
   // get cond_graph_nodes_
-  MS_ASSERT(first_partial_node_ != nullptr);
+  if (first_partial_node_ == nullptr) {
+    MS_LOG(ERROR) << "first_partial_node_ is nullptr.";
+    return RET_ERROR;
+  }
   MS_ASSERT(first_partial_node_->primitive != nullptr);
   MS_ASSERT(first_partial_node_->primitive->value.AsPartialFusion() != nullptr);
   first_subgraph_index_ = first_partial_node_->primitive->value.AsPartialFusion()->sub_graph_index;

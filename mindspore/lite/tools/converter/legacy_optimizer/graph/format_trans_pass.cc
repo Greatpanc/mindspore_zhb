@@ -181,6 +181,7 @@ STATUS FormatTransPass::DoNodeInoutFormatTrans(schema::MetaGraphT *graph) {
     } else if (IsContain(GetNhwcAllInputOpList(), op_type)) {
       auto input_size = node->inputIndex.size();
       if (GetCNodeTType(**iter) == schema::PrimitiveType_ResizeGrad) {
+        MS_ASSERT(iter != nullptr);
         MS_ASSERT((**iter).primitive != nullptr);
         MS_ASSERT((**iter).primitive->value.AsResizeGrad() != nullptr);
         if ((**iter).primitive->value.AsResizeGrad()->method == schema::ResizeMethod_NEAREST) {
@@ -266,6 +267,7 @@ NodeIter FormatTransPass::InsertFormatTransNode(schema::MetaGraphT *graph, NodeI
 }
 
 int FormatTransPass::GetFormat(const schema::CNodeT &node) {
+  MS_ASSERT(node != nullptr);
   MS_ASSERT(node.primitive != nullptr);
   switch (node.primitive->value.type) {
     case schema::PrimitiveType_Conv2DFusion:
@@ -355,7 +357,7 @@ STATUS FormatTransPass::ChangeOpAxis(schema::MetaGraphT *graph, const std::uniqu
   return RET_OK;
 }
 
-void FormatTransPass::TransformAttrByAxes(int *origin_attr, int *axes, int element_size) {
+void FormatTransPass::TransformAttrByAxes(int *origin_attr, const int *axes, int element_size) {
   if (origin_attr == nullptr || axes == nullptr || element_size == 0) {
     return;
   }
