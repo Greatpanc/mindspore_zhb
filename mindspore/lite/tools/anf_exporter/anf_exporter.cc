@@ -434,7 +434,7 @@ int AnfExporter::Anf2Fb(const FuncGraphPtr &func_graph, const std::unique_ptr<sc
   auto cnodes = GetOrderedCNodes(func_graph);
   for (const auto &cnode : cnodes) {
     auto prim = GetValueNode<std::shared_ptr<Primitive>>(cnode->input(0));
-    schema::PrimitiveT *primT = nullptr;
+    std::unique_ptr<schema::PrimitiveT> primT;
     if (prim == nullptr) {
       auto fg = GetValueNode<FuncGraphPtr>(cnode->input(0));
       if (fg != nullptr) {
@@ -492,7 +492,7 @@ int AnfExporter::Anf2Fb(const FuncGraphPtr &func_graph, const std::unique_ptr<sc
       primT = GetPrimitiveT(cnode->input(0));
     }
     node->name = cnode->fullname_with_scope();
-    node->primitive = std::unique_ptr<schema::PrimitiveT>(primT);
+    node->primitive = std::move(primT);
     ret = SetOpInputNode(cnode, meta_graphT, node.get());
     if (ret != RET_OK) {
       MS_LOG(ERROR) << "SetOpInputNode failed";
