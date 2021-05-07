@@ -139,8 +139,8 @@ STATUS NodeInferShape::InferShape(const CNodePtr &cnode) {
     return lite::RET_ERROR;
   }
   flatbuffers::FlatBufferBuilder fbb(INITIAL_SIZE);
-  auto prim = lite::ConvertToPrimitive(prim_t, &fbb);
-  delete prim_t;
+  auto prim = lite::ConvertToPrimitive(prim_t.release(), &fbb);
+  prim_t.reset();
   if (prim == nullptr) {
     MS_LOG(ERROR) << "get primitive failed.";
     FreeTensors(&inputs);
