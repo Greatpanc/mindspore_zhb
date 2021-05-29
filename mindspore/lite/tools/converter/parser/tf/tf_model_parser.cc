@@ -315,7 +315,8 @@ STATUS TFModelParser::ConvertConstVariant(const tensorflow::TensorProto &tensor_
     MS_LOG(ERROR) << "metadata type is not TYPE_BYTES";
     return RET_ERROR;
   }
-  std::string_view str_view(reflection->GetString(variant, field_descriptor));
+  std::string org_str = reflection->GetString(variant, field_descriptor);
+  std::string_view str_view(org_str);
   uint64_t scratch;
   if (CheckStrView(str_view, &scratch) != RET_OK) {
     return RET_ERROR;
@@ -323,7 +324,7 @@ STATUS TFModelParser::ConvertConstVariant(const tensorflow::TensorProto &tensor_
   auto element_dtype = static_cast<size_t>(scratch);
 
   tensorflow::TensorShapeProto element_shape_proto;
-  element_shape_proto.ParseFromString(std::string(str_view.data(), str_view.size()));
+  element_shape_proto.ParseFromString(org_str);
   auto dim_size = element_shape_proto.dim_size();
   std::vector<int> tensor_list_data(dim_size + 2);
   tensor_list_data[0] = TensorFlowUtils::GetTFDataType(tensorflow::DataType(element_dtype));
