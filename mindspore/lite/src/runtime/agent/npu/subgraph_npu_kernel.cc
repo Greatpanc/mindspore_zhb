@@ -207,7 +207,7 @@ int SubGraphNpuKernel::Init() {
     MS_ASSERT(npu_manager_ != nullptr);
 
     npu_manager_->AddModel(model_buffer_data, GetOMModelName(),
-                           static_cast<const lite::InnerContext *>(this->Context())->GetNpuInfo().frequency_);
+                           static_cast<const lite::InnerContext *>(this->context())->GetNpuInfo().frequency_);
 
     executor_ = new (std::nothrow) mindspore::lite::NPUExecutor(GetOMModelName(), npu_manager_);
 
