@@ -51,6 +51,9 @@ int ReduceFp16CPUKernel::Init() {
     case static_cast<int>(ReduceMode_ReduceMax):
       reducer_ = ReduceMaxFp16;
       break;
+    case static_cast<int>(ReduceMode_ReduceSum):
+      reducer_ = ReduceSumFp16;
+      break;
     default:
       MS_LOG(ERROR) << "Reduce unsupported reduce mode: " << mode_;
       return RET_ERROR;

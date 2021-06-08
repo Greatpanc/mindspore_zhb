@@ -61,3 +61,28 @@ int ReduceMaxFp16(int outer_size, int inner_size, int axis_size, const float16_t
   }
   return NNACL_OK;
 }
+
+int ReduceSumFp16(int outer_size, int inner_size, int axis_size, const float16_t *src_data, float16_t *dst_data, 
+                  int tid, int thread_num) {
+  if (src_data == NULL || dst_data == NULL) {
+    return NNACL_NULL_PTR;
+  }
+  int i, j;
+
+  for (j = tid; j < outer_size; j += thread_num) {
+    const float16_t *outer_src = src_data + j * axis_size * inner_size;
+    float16_t *outer_dst = dst_data + j * inner_size;
+    int k = 0;
+
+    for (; k < inner_size; k++) {
+      const float16_t *inner_src = outer_src + k;
+      float16_t *inner_dst = outer_dst + k;
+      float tmp = 0.0f;
+      for (i = 0; i < axis_size; i++) {
+        tmp += inner_src[i * inner_size];
+      }
+      *inner_dst = tmp;
+    }
+  }
+  return NNACL_OK;
+}
