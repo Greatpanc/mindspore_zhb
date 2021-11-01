@@ -259,8 +259,11 @@ if(APPLE)
 else()
     add_library(mindspore-lite_static STATIC $<TARGET_OBJECTS:lite_src_mid>)
 endif()
-set_target_properties(mindspore-lite_static PROPERTIES OUTPUT_NAME "mindspore-lite")
+set_target_properties(mindspore-lite PROPERTIES OUTPUT_NAME ${MSLITE_SONAME})
+set_target_properties(mindspore-lite_static PROPERTIES OUTPUT_NAME ${MSLITE_SONAME})
 set_target_properties(mindspore-lite_static PROPERTIES CLEAN_DIRECT_OUTPUT 1)
+target_link_options(mindspore-lite PRIVATE -Wl,-Bsymbolic)
+target_link_options(mindspore-lite_static PRIVATE -Wl,-Bsymbolic)
 
 if(NOT MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-private-field")
@@ -347,7 +350,7 @@ endif()
 if(DEFINED ARCHS)
     set_target_properties(mindspore-lite_static PROPERTIES FRAMEWORK TRUE)
     set_target_properties(mindspore-lite_static PROPERTIES
-            OUTPUT_NAME "mindspore-lite"
+            OUTPUT_NAME ${MSLITE_SONAME}
             FRAMEWORK_VERSION C
             XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
             XCODE_ATTRIBUTE_INSTALL_PAYH "@rpath"
