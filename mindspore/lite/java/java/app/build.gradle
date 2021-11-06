@@ -24,7 +24,8 @@ android {
     }
     android.libraryVariants.all {
         variant->variant.outputs.all {
-            outputFileName = "mindspore-lite.aar"
+            String libname = project.hasProperty("LITE_LIBNAME") ? LITE_LIBNAME : "mindspore-lite"
+            outputFileName = libname + ".aar"
         }
     }
     aaptOptions {
@@ -44,10 +45,11 @@ publishing {
     }
     publications {
         maven(MavenPublication) {
+            String libname = project.hasProperty("LITE_LIBNAME") ? LITE_LIBNAME : "mindspore-lite"
             groupId = 'mindspore'
-            artifactId = 'mindspore-lite'
+            artifactId = libname
             version = project.hasProperty("LITE_VERSION") ? LITE_VERSION : ""
-            String path = project.buildDir.path + File.separator + "outputs" + File.separator + "aar" + File.separator + "mindspore-lite.aar";
+            String path = project.buildDir.path + File.separator + "outputs" + File.separator + "aar" + File.separator + libname + ".aar";
             artifact(path)
         }
     }

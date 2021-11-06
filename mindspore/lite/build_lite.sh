@@ -41,7 +41,7 @@ build_lite_x86_64_jni_and_jar() {
     # copy x86 so
     local is_train=on
     cd ${BASEPATH}/output/tmp
-    local pkg_name=mindspore-lite-${VERSION_STR}-linux-x64
+    local pkg_name=${MSLITE_SONAME}-${VERSION_STR}-linux-x64
 
     cd ${BASEPATH}/output/tmp/
     rm -rf ${pkg_name}
@@ -50,7 +50,7 @@ build_lite_x86_64_jni_and_jar() {
     rm -rf ${LITE_JAVA_PATH}/native/libs/linux_x86/ && mkdir -pv ${LITE_JAVA_PATH}/native/libs/linux_x86/
     cp ./${pkg_name}/runtime/lib/*.so* ${LITE_JAVA_PATH}/java/linux_x86/libs/
     cp ./${pkg_name}/runtime/lib/*.so* ${LITE_JAVA_PATH}/native/libs/linux_x86/
-    local train_so=$pkg_name/runtime/lib/libmindspore-lite-train.so
+    local train_so=$pkg_name/runtime/lib/lib${MSLITE_SONAME}-train.so
     if [ ! -f "$train_so" ]; then
         echo "not exist"
         is_train=off
@@ -84,7 +84,7 @@ build_lite_x86_64_jni_and_jar() {
     gradle wrapper --gradle-version 6.6.1 --distribution-type all
     # build java common
     ${LITE_JAVA_PATH}/java/gradlew clean -p ${LITE_JAVA_PATH}/java/common
-    ${LITE_JAVA_PATH}/java/gradlew build -p ${LITE_JAVA_PATH}/java/common
+    ${LITE_JAVA_PATH}/java/gradlew build -PLITE_LIBNAME=${MSLITE_SONAME} -p ${LITE_JAVA_PATH}/java/common
     cp ${LITE_JAVA_PATH}/java/common/build/libs/mindspore-lite-java-common.jar ${LITE_JAVA_PATH}/java/linux_x86/libs/
 
     # build java fl_client
@@ -100,7 +100,7 @@ build_lite_x86_64_jni_and_jar() {
 
     # build jar
     ${LITE_JAVA_PATH}/java/gradlew clean -p ${LITE_JAVA_PATH}/java/linux_x86/
-    ${LITE_JAVA_PATH}/java/gradlew releaseJar -p ${LITE_JAVA_PATH}/java/linux_x86/
+    ${LITE_JAVA_PATH}/java/gradlew releaseJar -PLITE_LIBNAME=${MSLITE_SONAME} -p ${LITE_JAVA_PATH}/java/linux_x86/
     cp ${LITE_JAVA_PATH}/java/linux_x86/build/lib/jar/*.jar ${BASEPATH}/output/tmp/${pkg_name}/runtime/lib/
 
     # package
@@ -269,16 +269,16 @@ build_lite_arm64_and_jni() {
     build_lite "arm64"
     # copy arm64 so
     local is_train=on
-    local pkg_name=mindspore-lite-${VERSION_STR}-android-aarch64
+    local pkg_name=${MSLITE_SONAME}-${VERSION_STR}-android-aarch64
     cd "${BASEPATH}/mindspore/lite/build"
 
     rm -rf ${pkg_name}
     tar -zxf ${BASEPATH}/output/${pkg_name}.tar.gz
     rm -rf ${LITE_JAVA_PATH}/java/app/libs/arm64-v8a/ && mkdir -p ${LITE_JAVA_PATH}/java/app/libs/arm64-v8a/
     rm -rf ${LITE_JAVA_PATH}/native/libs/arm64-v8a/   && mkdir -p ${LITE_JAVA_PATH}/native/libs/arm64-v8a/
-    cp ./${pkg_name}/runtime/lib/libmindspore-lite.so ${LITE_JAVA_PATH}/java/app/libs/arm64-v8a/
-    cp ./${pkg_name}/runtime/lib/libmindspore-lite.so ${LITE_JAVA_PATH}/native/libs/arm64-v8a/
-    local train_so=$pkg_name/runtime/lib/libmindspore-lite-train.so
+    cp ./${pkg_name}/runtime/lib/lib${MSLITE_SONAME}.so ${LITE_JAVA_PATH}/java/app/libs/arm64-v8a/
+    cp ./${pkg_name}/runtime/lib/lib${MSLITE_SONAME}.so ${LITE_JAVA_PATH}/native/libs/arm64-v8a/
+    local train_so=$pkg_name/runtime/lib/lib${MSLITE_SONAME}-train.so
     if [ ! -f "$train_so" ]; then
         echo "not exist"
         is_train=off
@@ -314,16 +314,16 @@ build_lite_arm32_and_jni() {
     build_lite "arm32"
     # copy arm32 so
     local is_train=on
-    local pkg_name=mindspore-lite-${VERSION_STR}-android-aarch32
+    local pkg_name=${MSLITE_SONAME}-${VERSION_STR}-android-aarch32
     cd "${BASEPATH}/mindspore/lite/build"
 
     rm -rf ${pkg_name}
     tar -zxf ${BASEPATH}/output/${pkg_name}.tar.gz
     rm -rf ${LITE_JAVA_PATH}/java/app/libs/armeabi-v7a/ && mkdir -pv ${LITE_JAVA_PATH}/java/app/libs/armeabi-v7a/
     rm -rf ${LITE_JAVA_PATH}/native/libs/armeabi-v7a/   && mkdir -pv ${LITE_JAVA_PATH}/native/libs/armeabi-v7a/
-    cp ./${pkg_name}/runtime/lib/libmindspore-lite.so ${LITE_JAVA_PATH}/java/app/libs/armeabi-v7a/
-    cp ./${pkg_name}/runtime/lib/libmindspore-lite.so ${LITE_JAVA_PATH}/native/libs/armeabi-v7a/
-    local train_so=$pkg_name/runtime/lib/libmindspore-lite-train.so
+    cp ./${pkg_name}/runtime/lib/lib${MSLITE_SONAME}.so ${LITE_JAVA_PATH}/java/app/libs/armeabi-v7a/
+    cp ./${pkg_name}/runtime/lib/lib${MSLITE_SONAME}.so ${LITE_JAVA_PATH}/native/libs/armeabi-v7a/
+    local train_so=$pkg_name/runtime/lib/lib${MSLITE_SONAME}-train.so
     if [ ! -f "$train_so" ]; then
         echo "not exist"
         is_train=off
@@ -377,7 +377,7 @@ build_aar() {
 
     # build java fl_client
     local is_train=on
-    local train_so=${LITE_JAVA_PATH}/java/app/libs/arm64-v8a/libmindspore-lite-train.so
+    local train_so=${LITE_JAVA_PATH}/java/app/libs/arm64-v8a/lib${MSLITE_SONAME}-train.so
     if [ ! -f "$train_so" ]; then
         echo "not exist"
         is_train=off
@@ -387,21 +387,21 @@ build_aar() {
         ${LITE_JAVA_PATH}/java/gradlew createFlatBuffers -p ${LITE_JAVA_PATH}/java/fl_client
         ${LITE_JAVA_PATH}/java/gradlew build -p ${LITE_JAVA_PATH}/java/fl_client
         ${LITE_JAVA_PATH}/java/gradlew clearJar -p ${LITE_JAVA_PATH}/java/fl_client
-        ${LITE_JAVA_PATH}/java/gradlew flReleaseJarAAR --rerun-tasks -p ${LITE_JAVA_PATH}/java/fl_client
+        ${LITE_JAVA_PATH}/java/gradlew flReleaseJarAAR -PLITE_LIBNAME=${MSLITE_SONAME} --rerun-tasks -p ${LITE_JAVA_PATH}/java/fl_client
         cp ${LITE_JAVA_PATH}/java/fl_client/build/libs/jarAAR/mindspore-lite-java-flclient.jar ${LITE_JAVA_PATH}/java/app/libs
         rm -rf ${LITE_JAVA_PATH}/java/fl_client/.gradle ${LITE_JAVA_PATH}/java/fl_client/src/main/java/mindspore
     fi
 
     cp ${LITE_JAVA_PATH}/java/common/build/libs/mindspore-lite-java-common.jar ${LITE_JAVA_PATH}/java/app/libs
     ${LITE_JAVA_PATH}/java/gradlew clean -p ${LITE_JAVA_PATH}/java/app
-    ${LITE_JAVA_PATH}/java/gradlew assembleRelease  -p ${LITE_JAVA_PATH}/java/app
-    ${LITE_JAVA_PATH}/java/gradlew publish -PLITE_VERSION=${VERSION_STR} -p ${LITE_JAVA_PATH}/java/app
+    ${LITE_JAVA_PATH}/java/gradlew assembleRelease -PLITE_LIBNAME=${MSLITE_SONAME} -p ${LITE_JAVA_PATH}/java/app
+    ${LITE_JAVA_PATH}/java/gradlew publish -PLITE_LIBNAME=${MSLITE_SONAME} -PLITE_VERSION=${VERSION_STR} -p ${LITE_JAVA_PATH}/java/app
 
     cd ${LITE_JAVA_PATH}/java/app/build
     [ -n "${BASEPATH}" ] && rm -rf ${BASEPATH}/output/*.tar.gz*
-    zip -r ${BASEPATH}/output/mindspore-lite-maven-${VERSION_STR}.zip mindspore
+    zip -r ${BASEPATH}/output/${MSLITE_SONAME}-maven-${VERSION_STR}.zip mindspore
     cd ${BASEPATH}/output
-    sha256sum mindspore-lite-maven-${VERSION_STR}.zip > mindspore-lite-maven-${VERSION_STR}.zip.sha256
+    sha256sum ${MSLITE_SONAME}-maven-${VERSION_STR}.zip > ${MSLITE_SONAME}-maven-${VERSION_STR}.zip.sha256
 }
 
 update_submodule()
