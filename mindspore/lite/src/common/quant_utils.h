@@ -34,7 +34,6 @@ struct QuantParamT;
 }
 
 namespace lite {
-const int RET_QUANT_CONTINUE = 2;
 static constexpr double SCALE_THREASHOLD = 1e-38;
 
 static constexpr int kPerTensor = 1;
@@ -158,7 +157,7 @@ STATUS DoPerChannelQuant(const float *raw_datas, size_t elem_count, const schema
   bool do_quant = quant_param_size / (sizeof(float) * 8 - bit_num) < one_filter_size;
   if (!do_quant && quant_type == schema::QuantType_QUANT_WEIGHT) {
     MS_LOG(INFO) << "too few elements in a filter, no need to quantize. " << one_filter_size;
-    return RET_QUANT_CONTINUE;
+    return RET_NO_CHANGE;
   }
   for (int i = 0; i < channels; i++) {
     float min = FLT_MAX;

@@ -106,7 +106,8 @@ std::pair<float, float> OutlierMethod(std::vector<float> min_datas, std::vector<
 
 std::vector<int8_t> KMeans(float *data, size_t elem_count, size_t k, size_t epochs, schema::QuantParamT *quantParam);
 
-STATUS UpdateTensorDataAndSize(const tensor::TensorPtr &weight, void *quant_datas, int new_size, TypeId new_data_type);
+STATUS UpdateTensorDataAndSize(const ParameterPtr &parameter, const tensor::TensorPtr &weight, void *quant_datas,
+                               int new_size, TypeId new_data_type);
 
 int CalChannels(const ShapeVector &dims, int channel_cnt, bool *channel_at_first);
 
@@ -118,43 +119,15 @@ void CalQuantAssitInfo(const schema::PrimitiveT &primitive, const std::vector<in
 
 bool TensorQuantParamsInited(const schema::TensorT &tensor);
 
-template <typename T>
-STATUS DoBitPack(const tensor::TensorPtr &weight, const size_t &bit_num, const std::vector<T> &quant_datas) {
-  if (bit_num != 8 && bit_num != 16) {
-    std::vector<T> data{};
-    for (size_t i = 0; i < quant_datas.size(); ++i) {
-      data.emplace_back((static_cast<T>(quant_datas[i])));
-    }
-    if (bit_num > 0 && bit_num < 8) {
-      std::vector<uint8_t> pack_data{};
-      BitPack::BitPacking<T, uint8_t>(bit_num, data, &pack_data);
-      auto status =
-        UpdateTensorDataAndSize(weight, pack_data.data(), pack_data.size() * sizeof(uint8_t), kNumberTypeUInt8);
-      if (status != RET_OK) {
-        MS_LOG(ERROR) << "UpdateTensorDataAndSize error";
-        return RET_ERROR;
-      }
-    } else if (bit_num > 8 && bit_num < 16) {
-      std::vector<uint16_t> pack_data{};
-      BitPack::BitPacking<T, uint16_t>(bit_num, data, &pack_data);
-      auto status =
-        UpdateTensorDataAndSize(weight, pack_data.data(), pack_data.size() * sizeof(uint16_t), kNumberTypeUInt16);
-      if (status != RET_OK) {
-        MS_LOG(ERROR) << "UpdateTensorDataAndSize error";
-        return RET_ERROR;
-      }
-    }
-  }
-  return RET_OK;
-}
-
-STATUS MixedBitQuantFilter(const tensor::TensorPtr &weight, const PrimitivePtr &primitive, QuantType quant_type,
-                           WeightQuantType weight_quant_type, TypeId quant_data_type, double init_scale, int index);
+STATUS MixedBitQuantFilter(const ParameterPtr &parameter, const tensor::TensorPtr &weight,
+                           const PrimitivePtr &primitive, QuantType quant_type, WeightQuantType weight_quant_type,
+                           TypeId quant_data_type, double init_scale, int index);
 
 template <typename T>
-STATUS FixedBitQuantFilter(const tensor::TensorPtr &weight, const PrimitivePtr &primitive, QuantType quant_type,
-                           int quant_max, int quant_min, size_t bit_num, WeightQuantType weight_quant_type,
-                           TypeId quant_data_type, int index = 1, bool k_means = false) {
+STATUS FixedBitQuantFilter(const ParameterPtr &parameter, const tensor::TensorPtr &weight,
+                           const PrimitivePtr &primitive, QuantType quant_type, int quant_max, int quant_min,
+                           size_t bit_num, WeightQuantType weight_quant_type, TypeId quant_data_type, int index = 1,
+                           bool k_means = false) {
   MS_ASSERT(weight != nullptr);
   MS_ASSERT(primitive != nullptr);
   auto dims = weight->shape();
@@ -203,7 +176,8 @@ STATUS FixedBitQuantFilter(const tensor::TensorPtr &weight, const PrimitivePtr &
   } else {
     MS_LOG(ERROR) << "Unsupported weight quant type:" << weight_quant_type;
   }
-  auto status = UpdateTensorDataAndSize(weight, quant_data.data(), quant_data.size() * sizeof(T), quant_data_type);
+  auto status =
+    UpdateTensorDataAndSize(parameter, weight, quant_data.data(), quant_data.size() * sizeof(T), quant_data_type);
   if (status != RET_OK) {
     MS_LOG(ERROR) << "UpdateTensorDataAndSize error";
     return RET_ERROR;
@@ -223,11 +197,8 @@ STATUS FixedBitQuantFilter(const tensor::TensorPtr &weight, const PrimitivePtr &
     return RET_ERROR;
   }
   auto quant_param_holder = GetCNodeQuantHolder(primitive);
-  if (quant_type == QuantType_QUANT_ALL) {
-    quant_param_holder->set_input_quant_param(index, quant_params);
-  } else {
-    quant_param_holder->set_input_quant_param(index, quant_params);
-  }
+  quant_param_holder->set_input_quant_param(index, quant_params);
+  quant_param_holder->set_quant_type(quant_type);
   return ret;
 }
 

@@ -63,24 +63,6 @@ STATUS WeightQuantizer::SetAbstract(const tensor::TensorPtr &tensor_info, const 
   MS_CHECK_TRUE_MSG(tensor_info != nullptr, RET_NULL_PTR, "tensor_info is nullptr.");
   MS_CHECK_TRUE_MSG(param_node != nullptr, RET_NULL_PTR, "param_node is nullptr.");
   MS_CHECK_TRUE_MSG(primitive != nullptr, RET_NULL_PTR, "primitive is nullptr.");
-
-  // set dtype
-  tensor_info->set_data_type(type_id_);
-  auto abstract_base = param_node->abstract();
-  if (abstract_base == nullptr) {
-    MS_LOG(ERROR) << "Abstract of parameter is nullptr, " << param_node->name();
-    return RET_ERROR;
-  }
-  if (!utils::isa<abstract::AbstractTensorPtr>(abstract_base)) {
-    MS_LOG(ERROR) << "Abstract of parameter should be anstract tensor, " << param_node->name();
-    return RET_ERROR;
-  }
-  auto abstract_tensor = utils::cast<abstract::AbstractTensorPtr>(abstract_base);
-  MS_ASSERT(abstract_tensor != nullptr);
-  abstract_tensor->element()->set_type(TypeIdToType(type_id_));
-  auto quant_param_holder = GetCNodeQuantHolder(primitive);
-  quant_param_holder->set_quant_type(schema::QuantType_QUANT_WEIGHT);
-
   weight_quantized_tensors_.insert({tensor_info, param_node});
   return RET_OK;
 }
@@ -113,14 +95,15 @@ STATUS WeightQuantizer::DoConvQuantize(const CNodePtr &cnode) {
   auto status = RET_ERROR;
   if (is_mixed_bit_) {
     type_id_ = kNumberTypeInt16;
-    status = MixedBitQuantFilter(tensor_info, primitive, QuantType_QUANT_WEIGHT, WeightQuantType::MIXED_BIT_PER_LAYER,
-                                 type_id_, flags.mixedBitWeightQuantParam.init_scale, 1);
+    status =
+      MixedBitQuantFilter(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT,
+                          WeightQuantType::MIXED_BIT_PER_LAYER, type_id_, flags.mixedBitWeightQuantParam.init_scale, 1);
   } else if (type_id_ == kNumberTypeInt8) {
-    status = FixedBitQuantFilter<int8_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                         bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_);
+    status = FixedBitQuantFilter<int8_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
+                                         quant_min_, bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_);
   } else if (type_id_ == kNumberTypeInt16) {
-    status = FixedBitQuantFilter<int16_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                          bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_);
+    status = FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
+                                          quant_min_, bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_);
   }
   if (status == RET_CONTINUE) {
     return RET_OK;
@@ -158,15 +141,15 @@ STATUS WeightQuantizer::DoMulQuantize(const CNodePtr &cnode) {
             weight_quant_type = WeightQuantType::FIXED_BIT_PER_LAYER;
           }
           if (is_mixed_bit_) {
-            status =
-              MixedBitQuantFilter(tensor_info, primitive, QuantType_QUANT_WEIGHT, WeightQuantType::MIXED_BIT_PER_LAYER,
-                                  type_id_, flags.mixedBitWeightQuantParam.init_scale, i - 1);
+            status = MixedBitQuantFilter(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT,
+                                         WeightQuantType::MIXED_BIT_PER_LAYER, type_id_,
+                                         flags.mixedBitWeightQuantParam.init_scale, i - 1);
           } else if (type_id_ == kNumberTypeInt8) {
-            status = FixedBitQuantFilter<int8_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                                 bit_num_, weight_quant_type, type_id_, i - 1);
+            status = FixedBitQuantFilter<int8_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
+                                                 quant_min_, bit_num_, weight_quant_type, type_id_, i - 1);
           } else if (type_id_ == kNumberTypeInt16) {
-            status = FixedBitQuantFilter<int16_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
-                                                  quant_min_, bit_num_, weight_quant_type, type_id_, i - 1);
+            status = FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT,
+                                                  quant_max_, quant_min_, bit_num_, weight_quant_type, type_id_, i - 1);
           }
           if (status == RET_CONTINUE) {
             continue;
@@ -241,14 +224,15 @@ STATUS WeightQuantizer::DoGatherQuantize(const CNodePtr &cnode) {
 
   auto status = RET_ERROR;
   if (is_mixed_bit_) {
-    status = MixedBitQuantFilter(tensor_info, primitive, QuantType_QUANT_WEIGHT, WeightQuantType::MIXED_BIT_PER_LAYER,
-                                 type_id_, flags.mixedBitWeightQuantParam.init_scale, 0);
+    status =
+      MixedBitQuantFilter(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT,
+                          WeightQuantType::MIXED_BIT_PER_LAYER, type_id_, flags.mixedBitWeightQuantParam.init_scale, 0);
   } else if (type_id_ == kNumberTypeInt8) {
-    status = FixedBitQuantFilter<int8_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                         bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, 0);
+    status = FixedBitQuantFilter<int8_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
+                                         quant_min_, bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, 0);
   } else if (type_id_ == kNumberTypeInt16) {
-    status = FixedBitQuantFilter<int16_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                          bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, 0);
+    status = FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
+                                          quant_min_, bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, 0);
   }
   if (status == RET_CONTINUE) {
     return RET_OK;
@@ -293,11 +277,13 @@ STATUS WeightQuantizer::DoOptimizerQuantize(const CNodePtr &cnode) {
 
     auto status = RET_ERROR;
     if (type_id_ == kNumberTypeInt8) {
-      status = FixedBitQuantFilter<int8_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                           bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, idx - 1);
+      status =
+        FixedBitQuantFilter<int8_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
+                                    bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, idx - 1);
     } else if (type_id_ == kNumberTypeInt16) {
-      status = FixedBitQuantFilter<int16_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                            bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, idx - 1);
+      status =
+        FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
+                                     bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, idx - 1);
     }
     if (status != RET_OK && status != RET_CONTINUE) {
       MS_LOG(ERROR) << "MixedBitQuantFilter failed : " << status;
@@ -367,14 +353,17 @@ STATUS WeightQuantizer::ProcessLstmWeightByIndex(const CNodePtr &cnode, const Pr
   }
   auto status = RET_ERROR;
   if (is_mixed_bit_) {
-    status = MixedBitQuantFilter(tensor_info, primitive, QuantType_QUANT_WEIGHT, WeightQuantType::MIXED_BIT_PER_LAYER,
-                                 type_id_, flags.mixedBitWeightQuantParam.init_scale, index - 1);
+    status = MixedBitQuantFilter(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT,
+                                 WeightQuantType::MIXED_BIT_PER_LAYER, type_id_,
+                                 flags.mixedBitWeightQuantParam.init_scale, index - 1);
   } else if (type_id_ == kNumberTypeInt8) {
-    status = FixedBitQuantFilter<int8_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                         bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_, index - 1);
+    status =
+      FixedBitQuantFilter<int8_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
+                                  bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_, index - 1);
   } else if (type_id_ == kNumberTypeInt16) {
-    status = FixedBitQuantFilter<int16_t>(tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
-                                          bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_, index - 1);
+    status =
+      FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
+                                   bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_, index - 1);
   }
   if (status == RET_CONTINUE) {
     return RET_OK;

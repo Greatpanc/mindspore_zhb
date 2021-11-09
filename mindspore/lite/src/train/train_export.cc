@@ -130,7 +130,7 @@ int TrainExport::QuantTensorData(schema::TensorT *dest_tensor, const lite::Tenso
                                     schema::QuantType_WeightQuant, &(quant_params), quant_max, quant_min, bit_num,
                                     false, &data, channels, channel_at_first);
   }
-  if (ret == RET_QUANT_CONTINUE) {
+  if (ret == RET_NO_CHANGE) {
     MS_LOG(DEBUG) << "No Need to quant per channel";
     return RET_OK;
   }

@@ -152,7 +152,7 @@ int MixedBitWeightQuantizer::DoQuantization(float *weights, std::vector<int64_t>
                                                            target_relative_err_, target_search_tolerance_);
   if (br.status != RET_OK) {
     MS_LOG(ERROR) << "reached_max_iters";
-    return RET_ERROR;
+    return RET_NO_CHANGE;
   }
   schema::QuantParamT quant_param;
   int qr = QuantizeByScale(weights, weight_count, br.scale, &quant_param, quant_datas);
