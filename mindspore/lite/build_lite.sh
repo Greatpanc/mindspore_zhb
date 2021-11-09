@@ -115,6 +115,9 @@ build_lite_x86_64_jni_and_jar() {
 build_lite() {
     [ -n "${BASEPATH}" ] && rm -rf ${BASEPATH}/output
     get_version
+    if [[ ${MSLITE_SONAME} == "" ]]; then
+      MSLITE_SONAME="mindspore-lite"
+    fi
     echo "============ Start building MindSpore Lite ${VERSION_STR} ============"
     local local_lite_platform=${LITE_PLATFORM}
     if [[ "${LITE_ENABLE_AAR}" == "on" ]]; then

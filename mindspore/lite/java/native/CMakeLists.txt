@@ -80,6 +80,8 @@ set(JNI_SRC
 
 if(DEFINED ENV{MSLITE_SONAME})
     set(MSLITE_SONAME $ENV{MSLITE_SONAME})
+else()
+    set(MSLITE_SONAME mindspore-lite)
 endif()
 
 add_library(mindspore-lite-jni SHARED ${JNI_SRC})
