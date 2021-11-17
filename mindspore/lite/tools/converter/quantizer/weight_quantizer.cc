@@ -105,7 +105,7 @@ STATUS WeightQuantizer::DoConvQuantize(const CNodePtr &cnode) {
     status = FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
                                           quant_min_, bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_);
   }
-  if (status == RET_CONTINUE) {
+  if (status == RET_NO_CHANGE) {
     return RET_OK;
   } else if (status != RET_OK) {
     MS_LOG(ERROR) << "MixedBitQuantFilter failed : " << status;
@@ -151,7 +151,7 @@ STATUS WeightQuantizer::DoMulQuantize(const CNodePtr &cnode) {
             status = FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT,
                                                   quant_max_, quant_min_, bit_num_, weight_quant_type, type_id_, i - 1);
           }
-          if (status == RET_CONTINUE) {
+          if (status == RET_NO_CHANGE) {
             continue;
           } else if (status != RET_OK) {
             MS_LOG(ERROR) << cnode->fullname_with_scope() << " input " << i
@@ -234,7 +234,7 @@ STATUS WeightQuantizer::DoGatherQuantize(const CNodePtr &cnode) {
     status = FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_,
                                           quant_min_, bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, 0);
   }
-  if (status == RET_CONTINUE) {
+  if (status == RET_NO_CHANGE) {
     return RET_OK;
   } else if (status != RET_OK) {
     MS_LOG(ERROR) << "MixedBitQuantFilter failed : " << status;
@@ -285,7 +285,7 @@ STATUS WeightQuantizer::DoOptimizerQuantize(const CNodePtr &cnode) {
         FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
                                      bit_num_, WeightQuantType::FIXED_BIT_PER_LAYER, type_id_, idx - 1);
     }
-    if (status != RET_OK && status != RET_CONTINUE) {
+    if (status != RET_OK && status != RET_NO_CHANGE) {
       MS_LOG(ERROR) << "MixedBitQuantFilter failed : " << status;
       return status;
     }
@@ -365,7 +365,7 @@ STATUS WeightQuantizer::ProcessLstmWeightByIndex(const CNodePtr &cnode, const Pr
       FixedBitQuantFilter<int16_t>(param_node, tensor_info, primitive, QuantType_QUANT_WEIGHT, quant_max_, quant_min_,
                                    bit_num_, WeightQuantType::FIXED_BIT_PER_CHANNEL, type_id_, index - 1);
   }
-  if (status == RET_CONTINUE) {
+  if (status == RET_NO_CHANGE) {
     return RET_OK;
   } else if (status != RET_OK) {
     MS_LOG(ERROR) << "MixedBitQuantFilter failed : " << status;
