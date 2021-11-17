@@ -651,7 +651,7 @@ STATUS FullQuantQuantizer::DoParameterNodeQuant(const CNodePtr &cnode, const Anf
   }
   // support for share weight.
   if (type_id == kNumberTypeInt8) {
-    return RET_CONTINUE;
+    return RET_NO_CHANGE;
   }
   if (type_id != kNumberTypeFloat32) {
     ret = SetInOutQuantParam(input_node, nullptr, primitive, true, input_index - 1);

@@ -160,7 +160,7 @@ STATUS FixedBitQuantFilter(const ParameterPtr &parameter, const tensor::TensorPt
     ret = DoPerChannelQuant<T>(static_cast<float *>(weight->data_c()), weight->DataSize(),
                                static_cast<mindspore::schema::QuantType>(quant_type), &quant_params, quant_max,
                                quant_min, bit_num, k_means, &quant_data, channels, channel_at_first);
-    if (ret == RET_CONTINUE) {
+    if (ret == RET_NO_CHANGE) {
       return ret;
     } else if (ret != RET_OK) {
       MS_LOG(ERROR) << "Do per channel quant failed.";
