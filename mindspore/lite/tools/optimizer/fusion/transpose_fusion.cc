@@ -217,12 +217,13 @@ AnfNodePtr TransposeFusion::TransTransFusion(const FuncGraphPtr &func_graph, con
     if (perm == ori_perm) {
       return pre_cnode->input(1);
     }
-    auto name = pre_cnode->fullname_with_scope();
-    auto new_transpose = GenTransposeNode(func_graph, pre_cnode->input(1), perm, name);
+    auto name = trans_cnode_2->fullname_with_scope() + "_perm";
+    auto perm_node = BuildIntVecParameterNode(func_graph, perm, name);
+    MS_CHECK_TRUE_RET(perm_node != nullptr, nullptr);
     auto manager = func_graph->manager();
     MS_ASSERT(manager != nullptr);
-    manager->Replace(trans_cnode_2, new_transpose);
-    return new_transpose;
+    manager->SetEdge(trans_cnode_2, 1, pre_cnode->input(1));
+    manager->SetEdge(trans_cnode_2, kInputIndexTwo, perm_node);
   }
   return nullptr;
 }
