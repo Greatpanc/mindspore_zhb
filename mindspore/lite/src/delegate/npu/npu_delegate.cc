@@ -50,6 +50,7 @@
 #include "src/delegate/npu/op/tile_npu.h"
 #include "src/delegate/npu/op/transpose_npu.h"
 #include "src/delegate/npu/op/unsqueeze_npu.h"
+#include "src/delegate/npu/op/abs_npu.h"
 #include "src/delegate/npu/npu_graph.h"
 #include "src/delegate/delegate_utils.h"
 #include "src/delegate/npu/pass/npu_transform_pass.h"
@@ -131,6 +132,7 @@ Status NPUDelegate::Init() {
     {schema::PrimitiveType_Sin, GetNPUOp<ArithmeticSelfNPUOp>},
     {schema::PrimitiveType_Sqrt, GetNPUOp<ArithmeticSelfNPUOp>},
     {schema::PrimitiveType_Square, GetNPUOp<ArithmeticSelfNPUOp>},
+    {schema::PrimitiveType_ExpFusion, GetNPUOp<ArithmeticSelfNPUOp>},
     {schema::PrimitiveType_AvgPoolFusion, GetNPUOp<AvgPoolingNPUOp>},
     {schema::PrimitiveType_MaxPoolFusion, GetNPUOp<MaxPoolingNPUOp>},
     {schema::PrimitiveType_FusedBatchNorm, GetNPUOp<BatchnormNPUOp>},
@@ -157,6 +159,7 @@ Status NPUDelegate::Init() {
     {schema::PrimitiveType_TileFusion, GetNPUOp<TileNPUOp>},
     {schema::PrimitiveType_Transpose, GetNPUOp<TransposeNPUOp>},
     {schema::PrimitiveType_Unsqueeze, GetNPUOp<UnsqueezeNPUOp>},
+    {schema::PrimitiveType_Abs, GetNPUOp<AbsNPUOp>},
   };
   return mindspore::kSuccess;
 }
