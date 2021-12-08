@@ -69,6 +69,10 @@ int PoolTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
 
   // pooling layer
   nvinfer1::Dims windowSize = lite::ConvertCudaDims(kernel_size_);
+  if (windowSize.nbDims == -1) {
+    MS_LOG(ERROR) << "ConvertCudaDims failed for " << op_name_;
+    return RET_ERROR;
+  }
   nvinfer1::IPoolingLayer *pooling_layer = network->addPoolingNd(*pool_input, pooling_type_, windowSize);
   if (pooling_layer == nullptr) {
     MS_LOG(ERROR) << "addPoolingNd failed for TensorRT.";
@@ -82,16 +86,20 @@ int PoolTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
   if (activation_type_ == schema::ActivationType::ActivationType_NO_ACTIVATION) {
     activation_layer = pooling_layer;
   } else {
-    activation_layer = ActivationTensorRT::AddActivation(network, activation_type_, 0, pooling_layer->getOutput(0));
+    activation_layer =
+      ActivationTensorRT::AddActivation(network, activation_type_, 0, 0, 0, pooling_layer->getOutput(0));
     if (activation_layer == nullptr) {
       MS_LOG(ERROR) << "addActivation for pool failed";
       return RET_ERROR;
     }
     activation_layer->setName((op_name_ + "_activation").c_str());
   }
-  activation_layer->getOutput(0)->setName((op_name_ + "_output").c_str());
-  this->AddInnerOutTensors(ITensorHelper{activation_layer->getOutput(0), Format::NCHW});
-  MS_LOG(DEBUG) << "output " << GetTensorFormat(activation_layer->getOutput(0), Format::NCHW);
+  nvinfer1::ITensor *out_trt_tensor = activation_layer->getOutput(0);
+  out_trt_tensor->setName((op_name_ + "_output").c_str());
+  bool same_format = SameDims(out_trt_tensor->getDimensions(), out_tensors_[0].Shape()) &&
+                     SameDims(tensorrt_in_tensors_[0].trt_tensor_->getDimensions(), in_tensors_[0].Shape());
+  this->AddInnerOutTensors(ITensorHelper{out_trt_tensor, Format::NCHW, same_format});
+  MS_LOG(DEBUG) << "output " << GetTensorFormat(out_trt_tensor, Format::NCHW);
   return RET_OK;
 }
 
@@ -105,19 +113,28 @@ int PoolTensorRT::ParseParams() {
       }
       pooling_type_ = nvinfer1::PoolingType::kAVERAGE;
 
-      auto kernel_size = pool_primitive->kernel_size();
-      if (kernel_size == nullptr) {
-        MS_LOG(ERROR) << "get kernel size failed: " << op_name_;
-        return RET_ERROR;
-      }
-      kernel_size_ = std::vector<int64_t>(kernel_size->begin(), kernel_size->end());
-
       auto stride = pool_primitive->strides();
       if (stride == nullptr) {
         MS_LOG(ERROR) << "get stride failed: " << op_name_;
         return RET_ERROR;
       }
       stride_ = std::vector<int64_t>(stride->begin(), stride->end());
+
+      auto kernel_size = pool_primitive->kernel_size();
+      if (kernel_size == nullptr) {
+        int in_h = in_tensors_[0].Shape()[kNHWC_H];
+        int in_w = in_tensors_[0].Shape()[kNHWC_W];
+        int out_h = out_tensors_[0].Shape()[kNHWC_H];
+        int out_w = out_tensors_[0].Shape()[kNHWC_W];
+        int kernel_h = in_h - (out_h - 1) * stride_[0];
+        int kernel_w = in_w - (out_w - 1) * stride_[1];
+        kernel_size_.push_back(kernel_h);
+        kernel_size_.push_back(kernel_w);
+        MS_LOG(WARNING) << op_name_ << "don't has kernel size, caculate kernel size on ms tensor, kernel_h is "
+                        << kernel_h << ", kernel_w is " << kernel_w;
+      } else {
+        kernel_size_ = std::vector<int64_t>(kernel_size->begin(), kernel_size->end());
+      }
 
       auto padding = pool_primitive->pad();
       if (padding == nullptr) {
@@ -154,10 +171,11 @@ int PoolTensorRT::ParseParams() {
 
       auto padding = pool_primitive->pad();
       if (padding == nullptr) {
-        MS_LOG(ERROR) << "get padding failed: " << op_name_;
-        return RET_ERROR;
+        MS_LOG(INFO) << "get padding is null, set to default 0: " << op_name_;
+        padding_ = {0, 0, 0, 0};
+      } else {
+        padding_ = std::vector<int64_t>(padding->begin(), padding->end());
       }
-      padding_ = std::vector<int64_t>(padding->begin(), padding->end());
 
       pad_mode_ = pool_primitive->pad_mode();
       activation_type_ = pool_primitive->activation_type();
@@ -173,6 +191,10 @@ int PoolTensorRT::ParseParams() {
 
 void PoolTensorRT::AddParams(nvinfer1::IPoolingLayer *pooling_layer) {
   nvinfer1::Dims stride_dims = ConvertCudaDims(stride_);
+  if (stride_dims.nbDims == -1) {
+    MS_LOG(ERROR) << "ConvertCudaDims failed for " << op_name_;
+    return;
+  }
   pooling_layer->setStrideNd(stride_dims);
   if (pad_mode_ == schema::PadMode::PadMode_SAME) {
     pooling_layer->setPaddingMode(nvinfer1::PaddingMode::kSAME_UPPER);

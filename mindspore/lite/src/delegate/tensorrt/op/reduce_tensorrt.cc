@@ -24,23 +24,11 @@ int ReduceTensorRT::IsSupport(const schema::Primitive *primitive, const std::vec
     MS_LOG(ERROR) << "Unsupported input tensor unknown shape: " << op_name_;
     return RET_ERROR;
   }
-  auto reduce_op = primitive->value_as_ReduceFusion();
-  if (reduce_op == nullptr) {
-    MS_LOG(ERROR) << "convert failed";
-    return RET_ERROR;
-  }
   if (in_tensors.size() != INPUT_SIZE2) {
     MS_LOG(ERROR) << "Unsupported input tensor size, size is " << in_tensors.size();
   }
   if (out_tensors.size() != 1) {
     MS_LOG(ERROR) << "Unsupported output tensor size, size is " << out_tensors.size();
-  }
-  auto it = reduce_ops_.find(reduce_op->mode());
-  if (it != reduce_ops_.end()) {
-    reduce_op_ = it->second;
-  } else {
-    MS_LOG(ERROR) << "unsupported ReduceMode: " << reduce_op->mode();
-    return RET_ERROR;
   }
   return RET_OK;
 }
@@ -96,7 +84,8 @@ int ReduceTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
   MS_LOG(DEBUG) << "after transpose and expand dims " << GetTensorFormat(reduce_input, out_format_);
 
   uint32_t reduceAxis = GetAxis();
-  nvinfer1::IReduceLayer *layer = network->addReduce(*reduce_input, reduce_op_, reduceAxis, keep_dims);
+  nvinfer1::IReduceLayer *layer =
+    network->addReduce(*reduce_input, ConvertTRTReduceMode(reduce_op->mode()), reduceAxis, keep_dims);
   if (layer == nullptr) {
     MS_LOG(ERROR) << "addReduce failed for TensorRT.";
     return RET_ERROR;
@@ -113,6 +102,15 @@ int ReduceTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
     }
     squeeze_layer->setName((op_name_ + "_squeeze").c_str());
     nvinfer1::Dims squeeze_dims = ConvertCudaDims(out_tensors_[0].Shape());
+    if (squeeze_dims.nbDims == -1) {
+      MS_LOG(ERROR) << "ConvertCudaDims failed for " << op_name_;
+      return RET_ERROR;
+    }
+    for (int i = 0; i < squeeze_dims.nbDims; i++) {
+      if (layer->getOutput(0)->getDimensions().d[i] == -1) {
+        squeeze_dims.d[i] = 0;
+      }
+    }
     squeeze_layer->setReshapeDimensions(squeeze_dims);
     out_tensor = squeeze_layer->getOutput(0);
   }
@@ -121,7 +119,7 @@ int ReduceTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
     return RET_ERROR;
   }
   out_tensor->setName((op_name_ + "_output").c_str());
-  this->AddInnerOutTensors(ITensorHelper{out_tensor, out_format_});
+  this->AddInnerOutTensors(ITensorHelper{out_tensor, out_format_, true});
   MS_LOG(DEBUG) << "output " << GetTensorFormat(out_tensor, out_format_);
   return RET_OK;
 }
@@ -138,11 +136,11 @@ uint32_t ReduceTensorRT::GetAxis() {
   }
   int *axis_data = reinterpret_cast<int *>(axis_tensor.MutableData());
   for (int i = 0; i < axis_tensor.ElementNum(); i++) {
-    int format_axis_data = *axis_data;
+    int format_axis_data = (*axis_data == -1) ? in_tensors_[0].Shape().size() - 1 : *axis_data;
+    MS_LOG(DEBUG) << op_name_ << " reduceAxis at index : " << *axis_data;
     reduceAxis |= 1u << format_axis_data;
     axis_data++;
   }
-  MS_LOG(DEBUG) << "reduceAxis: " << reduceAxis;
   return reduceAxis;
 }
 }  // namespace mindspore::lite

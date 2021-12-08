@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <queue>
 #include "src/delegate/delegate_utils.h"
 
 namespace mindspore::lite {
@@ -40,7 +41,7 @@ TensorRTSubGraph::~TensorRTSubGraph() {
     engine_ = nullptr;
   }
   if (tensor_bindings_ != nullptr) {
-    delete tensor_bindings_;
+    delete[] tensor_bindings_;
     tensor_bindings_ = nullptr;
   }
   for (auto op : all_ops_) {
@@ -106,8 +107,8 @@ int TensorRTSubGraph::SetDeviceConfig() {
     input_hw_index_ = -1;
   }
 
-  // config setMaxWorkspaceSize to 32 MB for max limit
-  config_->setMaxWorkspaceSize(32 * (1 << 20));
+  // config setMaxWorkspaceSize to 1024 MB for max limit
+  config_->setMaxWorkspaceSize(1024 * (1 << 20));
   return RET_OK;
 }
 
@@ -155,15 +156,19 @@ nvinfer1::ITensor *TensorRTSubGraph::SetTensorRTNetworkInput(const mindspore::MS
   if (runtime_->GetBatchSize() == 0) {
     runtime_->SetBatchSize(input_dims.d[0]);
     MS_LOG(INFO) << "batch size init as " << runtime_->GetBatchSize();
-    input_dims.d[0] = -1;  // dynamic batch size with wildcard N, default batchsize is first dims
-    input_batchsize_index_ = 0;
+    if (input_batchsize_index_ != -1) {
+      input_dims.d[0] = -1;  // dynamic batch size with wildcard N, default batchsize is first dims
+      input_batchsize_index_ = 0;
+    }
   } else {
-    for (int n = 0; n < input_dims.nbDims; n++) {
-      if (input_dims.d[n] == runtime_->GetBatchSize()) {
-        // first dims equals to batchsize
-        input_dims.d[n] = -1;
-        input_batchsize_index_ = n;
-        break;
+    if (input_batchsize_index_ != -1) {
+      for (int n = 0; n < input_dims.nbDims; n++) {
+        if (input_dims.d[n] == runtime_->GetBatchSize()) {
+          // first dims equals to batchsize
+          input_dims.d[n] = -1;
+          input_batchsize_index_ = n;
+          break;
+        }
       }
     }
   }
@@ -176,27 +181,29 @@ nvinfer1::ITensor *TensorRTSubGraph::SetTensorRTNetworkInput(const mindspore::MS
   }
   // We do not need to check the return of setDimension and addOptimizationProfile here as all dims are explicitly set
   nvinfer1::Dims input_dims_min = ConvertCudaDims(in_tensor.Shape());
-  input_dims_min.d[input_batchsize_index_] = 1;
-  if (input_hw_index_ != -1) {
-    input_dims_min.d[input_hw_index_] = 1;
-    input_dims_min.d[input_hw_index_ + 1] = 1;
+  if (input_batchsize_index_ != -1) {
+    input_dims_min.d[input_batchsize_index_] = 1;
+    if (input_hw_index_ != -1) {
+      input_dims_min.d[input_hw_index_] = 1;
+      input_dims_min.d[input_hw_index_ + 1] = 1;
+    }
   }
   if (!profile_->setDimensions(in_tensor.Name().c_str(), nvinfer1::OptProfileSelector::kMIN, input_dims_min)) {
-    MS_LOG(ERROR) << "setDimensions of kMIN failed.";
+    MS_LOG(ERROR) << "setDimensions of kMIN failed for " << in_tensor.Name();
     return nullptr;
   }
   nvinfer1::Dims input_dims_opt = ConvertCudaDims(in_tensor.Shape());
   if (!profile_->setDimensions(in_tensor.Name().c_str(), nvinfer1::OptProfileSelector::kOPT, input_dims_opt)) {
-    MS_LOG(ERROR) << "setDimensions of kOPT failed.";
+    MS_LOG(ERROR) << "setDimensions of kOPT failed for " << in_tensor.Name();
     return nullptr;
   }
   nvinfer1::Dims input_dims_max = ConvertCudaDims(in_tensor.Shape());
   // input_dims_max should be the same with input network dims
   if (!profile_->setDimensions(in_tensor.Name().c_str(), nvinfer1::OptProfileSelector::kMAX, input_dims_max)) {
-    MS_LOG(ERROR) << "setDimensions of kMAX failed.";
+    MS_LOG(ERROR) << "setDimensions of kMAX failed for " << in_tensor.Name();
     return nullptr;
   }
-
+  MS_LOG(INFO) << "add network input: " << in_tensor.Name();
   return this->network_->addInput(in_tensor.Name().c_str(), cuda_dtype, input_dims);
 }
 
@@ -213,7 +220,7 @@ int TensorRTSubGraph::BuildTensorRTGraph() {
           MS_LOG(ERROR) << "SetTensorRTNetworkInput failed for " << in_tensor.Name();
           return RET_ERROR;
         }
-        cur_op->AddInnerInTensors(ITensorHelper{trt_tensor, in_tensor.format()});
+        cur_op->AddInnerInTensors(ITensorHelper{trt_tensor, in_tensor.format(), true});
         continue;
       }
 
@@ -225,7 +232,7 @@ int TensorRTSubGraph::BuildTensorRTGraph() {
             MS_LOG(ERROR) << "Weight Tensor data is nullptr.";
             return RET_ERROR;
           }
-          trt_tensor.trt_tensor_ = lite::ConvertConstantTensor(this->network_, in_tensor);
+          trt_tensor.trt_tensor_ = lite::ConvertConstantTensor(this->network_, in_tensor, cur_op->GetOpName());
           trt_tensor.format_ = Format::NHWC;
           MS_LOG(INFO) << "auto convert constant tensor for: " << in_tensor.Name();
           cur_op->AddInnerInTensors(trt_tensor);
@@ -298,7 +305,10 @@ int TensorRTSubGraph::MarkOutputs() {
 }
 
 int TensorRTSubGraph::Prepare() {
-  lite::SetCudaDevice(device_info_);
+  int ret = lite::SetCudaDevice(device_info_);
+  if (ret != RET_OK) {
+    return ret;
+  }
   if (this->engine_ == nullptr) {
     MS_LOG(ERROR) << "engine_ is null in this builder_";
     return RET_ERROR;
@@ -355,6 +365,10 @@ int TensorRTSubGraph::Prepare() {
 }
 
 int TensorRTSubGraph::ReSize() {
+  if (input_batchsize_index_ == -1) {
+    MS_LOG(ERROR) << "current network don't support resize.";
+    return RET_ERROR;
+  }
   for (size_t i = 0; i < trt_in_tensor_name_.size(); i++) {
     // only support resize batch size
     for (int j = 0; j < this->network_->getNbInputs(); j++) {
@@ -424,7 +438,10 @@ int TensorRTSubGraph::ReSize() {
 }
 
 int TensorRTSubGraph::Execute() {
-  lite::SetCudaDevice(device_info_);
+  int ret = lite::SetCudaDevice(device_info_);
+  if (ret != RET_OK) {
+    return ret;
+  }
   if (runtime_->GetBatchSize() <= 0) {
     MS_LOG(ERROR) << "TensorRTSubGraph has invalid batch size.";
     return RET_ERROR;
@@ -442,7 +459,7 @@ int TensorRTSubGraph::Execute() {
     runtime_->GetAllocator()->MarkMemValid(trt_in_tensor_name_[i], true);
   }
 
-  auto ret = this->trt_context_->executeV2(tensor_bindings_);
+  ret = this->trt_context_->executeV2(tensor_bindings_);
   if (!ret) {
     MS_LOG(ERROR) << "TensorRT execute failed.";
     return RET_ERROR;
@@ -454,8 +471,10 @@ int TensorRTSubGraph::Execute() {
     auto out_dims = this->trt_context_->getBindingDimensions(index);
     std::vector<int64_t> new_shape = lite::ConvertMSShape(out_dims);
     // batchsize resize need set new batch size
-    if (runtime_->GetBatchSize() != new_shape[output_batchsize_index_]) {
-      new_shape[output_batchsize_index_] = runtime_->GetBatchSize();
+    if (input_batchsize_index_ != -1) {
+      if (runtime_->GetBatchSize() != new_shape[output_batchsize_index_]) {
+        new_shape[output_batchsize_index_] = runtime_->GetBatchSize();
+      }
     }
     for (int od = 0; od < out_dims.nbDims; od++) {
       MS_LOG(DEBUG) << "out tensor " << trt_out_tensor_name_[i] << " dims at " << od << " is " << new_shape[od];

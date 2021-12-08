@@ -28,7 +28,13 @@
 #define kNCHW_C 1
 #define kNCHW_H 2
 #define kNCHW_W 3
+#define kNHWC_N 0
+#define kNHWC_H 1
+#define kNHWC_W 2
+#define kNHWC_C 3
+
 namespace mindspore::lite {
+struct ITensorHelper;
 struct ActivationParams {
   nvinfer1::ActivationType activation_type;
   bool has_alpha;
@@ -51,6 +57,8 @@ bool SameDims(nvinfer1::Dims dims, const std::vector<int64_t> &shape);
 
 std::vector<int64_t> ConvertMSShape(const nvinfer1::Dims dims);
 
+std::vector<int64_t> NHWC2NCHW(std::vector<int64_t> nhwc_shape);
+
 nvinfer1::DataType ConvertDataType(DataType type_id);
 
 nvinfer1::IShuffleLayer *NHWC2NCHW(nvinfer1::INetworkDefinition *network, const nvinfer1::ITensor &input);
@@ -59,13 +67,15 @@ nvinfer1::IShuffleLayer *NCHW2NHWC(nvinfer1::INetworkDefinition *network, const 
 
 ActivationParams ConvertActivationType(schema::ActivationType activation_type);
 
-nvinfer1::ITensor *ConvertConstantTensor(nvinfer1::INetworkDefinition *network, const mindspore::MSTensor &ms_tensor);
+nvinfer1::ITensor *ConvertConstantTensor(nvinfer1::INetworkDefinition *network, const mindspore::MSTensor &ms_tensor,
+                                         const std::string &op_name);
 
 nvinfer1::ITensor *ConvertTensorWithExpandDims(nvinfer1::INetworkDefinition *network,
-                                               const mindspore::MSTensor &ms_tensor, size_t expand_shape_size);
+                                               const mindspore::MSTensor &ms_tensor, size_t expand_shape_size,
+                                               const std::string &op_name);
 
 nvinfer1::ITensor *ConvertScalarToITensor(nvinfer1::INetworkDefinition *network, size_t shape_size, const void *value,
-                                          const DataType data_type);
+                                          const DataType data_type, const std::string &op_name);
 
 nvinfer1::Weights TransposeWeight(const mindspore::MSTensor &ms_tensor, void **pack_weight);
 
@@ -73,7 +83,9 @@ nvinfer1::Weights TransposeWeightFP32(const mindspore::MSTensor &ms_tensor, void
 
 nvinfer1::Weights ConvertWeight(const mindspore::MSTensor &ms_tensor);
 
-void SetCudaDevice(std::shared_ptr<GPUDeviceInfo> device_info_);
+int SetCudaDevice(std::shared_ptr<GPUDeviceInfo> device_info_);
+
+int SetCudaDevice(int device_id);
 
 Format GetOutputFormat(Format input_format, nvinfer1::Permutation perm);
 
@@ -83,6 +95,11 @@ void PackNHWCToNCHWFp16(const void *src, void *dst, size_t batch, size_t plane, 
                         size_t thread_count);
 
 std::string GetTensorFormat(nvinfer1::ITensor *trt_tensor, mindspore::Format format);
+
+nvinfer1::ReduceOperation ConvertTRTReduceMode(schema::ReduceMode mode);
+
+nvinfer1::ITensor *PreprocessInputs2SameDim(nvinfer1::INetworkDefinition *network,
+                                            const ITensorHelper &input_tensor_helper);
 
 template <typename T1, typename T2>
 bool SameDims(const std::vector<T1> &shape1, const std::vector<T2> &shape2) {
@@ -100,6 +117,7 @@ bool SameDims(const std::vector<T1> &shape1, const std::vector<T2> &shape2) {
 template <typename T>
 nvinfer1::Dims ConvertCudaDims(const std::vector<T> &shape) {
   nvinfer1::Dims dims{};
+  dims.nbDims = -1;
   if (!shape.empty() && shape.size() <= static_cast<size_t>(dims.MAX_DIMS)) {
     dims.nbDims = shape.size();
     for (int i = 0; i < dims.nbDims; i++) {

@@ -51,40 +51,50 @@ int ConcateTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
   }
 
   nvinfer1::ITensor *trt_input_tensors[tensorrt_in_tensors_.size()];
-  if (tensorrt_in_tensors_[0].trt_tensor_->getDimensions().nbDims !=
-      tensorrt_in_tensors_[1].trt_tensor_->getDimensions().nbDims) {
-    MS_LOG(ERROR) << "dims of inputs is invalid for " << op_name_;
-    return RET_ERROR;
+  int input_nbDims = tensorrt_in_tensors_[0].trt_tensor_->getDimensions().nbDims;
+  Format out_format = tensorrt_in_tensors_[0].format_;
+
+  for (size_t i = 0; i < tensorrt_in_tensors_.size(); i++) {
+    if (tensorrt_in_tensors_[i].trt_tensor_->getDimensions().nbDims != input_nbDims) {
+      MS_LOG(ERROR) << "dims of inputs is invalid for " << op_name_;
+      return RET_ERROR;
+    }
+    // keep origin format if all input format are the same
+    if (input_nbDims == DIMENSION_4D && tensorrt_in_tensors_[i].format_ != out_format) {
+      out_format = Format::NHWC;
+    }
   }
 
-  // make sure two inputs have same format
-  Format out_format = tensorrt_in_tensors_[0].format_;
-  if (tensorrt_in_tensors_[0].trt_tensor_->getDimensions().nbDims == DIMENSION_4D) {
-    if (tensorrt_in_tensors_[0].format_ == tensorrt_in_tensors_[1].format_) {
-      for (size_t i = 0; i < tensorrt_in_tensors_.size(); i++) {
+  // make sure all inputs are same format
+  if (input_nbDims == DIMENSION_4D) {
+    for (size_t i = 0; i < tensorrt_in_tensors_.size(); i++) {
+      if (tensorrt_in_tensors_[i].format_ == out_format) {
         trt_input_tensors[i] = tensorrt_in_tensors_[i].trt_tensor_;
+        MS_LOG(DEBUG) << "concate input " << GetTensorFormat(trt_input_tensors[i], out_format);
+      } else {
+        nvinfer1::IShuffleLayer *transpose_layer = NCHW2NHWC(network, *tensorrt_in_tensors_[i].trt_tensor_);
+        if (transpose_layer == nullptr) {
+          MS_LOG(ERROR) << "op action convert failed";
+          return RET_ERROR;
+        }
+        transpose_layer->setName(
+          (std::string(tensorrt_in_tensors_[i].trt_tensor_->getName()) + "_transpose2NHWC").c_str());
+        trt_input_tensors[i] = transpose_layer->getOutput(0);
+        MS_LOG(DEBUG) << "concate input " << GetTensorFormat(trt_input_tensors[i], Format::NHWC);
       }
-    } else {
-      // when inputs format are different, change to NHWC
-      out_format = Format::NHWC;
-      int transpose_tensor_index = tensorrt_in_tensors_[0].format_ == Format::NCHW ? 0 : 1;
-      trt_input_tensors[1 - transpose_tensor_index] = tensorrt_in_tensors_[1 - transpose_tensor_index].trt_tensor_;
-      nvinfer1::IShuffleLayer *transpose_layer =
-        NCHW2NHWC(network, *tensorrt_in_tensors_[transpose_tensor_index].trt_tensor_);
-      if (transpose_layer == nullptr) {
-        MS_LOG(ERROR) << "op action convert failed";
-        return RET_ERROR;
-      }
-      trt_input_tensors[transpose_tensor_index] = transpose_layer->getOutput(0);
     }
   } else {
     for (size_t i = 0; i < tensorrt_in_tensors_.size(); i++) {
       trt_input_tensors[i] = tensorrt_in_tensors_[i].trt_tensor_;
+      MS_LOG(DEBUG) << "concate input " << GetTensorFormat(trt_input_tensors[i], tensorrt_in_tensors_[i].format_);
     }
   }
 
   int axis = RET_INVALID_OP_ATTR;
   axis = concate_op->axis();
+  if (axis == -1) {
+    axis = input_nbDims - 1;
+  }
   if (trt_input_tensors[0]->getDimensions().nbDims == DIMENSION_4D && out_format == Format::NCHW) {
     // when inputs all NCHW, change axis
     axis = ConvertAxisFromNHWC2NCHW(axis);
@@ -103,7 +113,9 @@ int ConcateTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
   }
   concate_layer->setName(op_name_.c_str());
   concate_layer->getOutput(0)->setName((op_name_ + "_output").c_str());
-  this->AddInnerOutTensors(ITensorHelper{concate_layer->getOutput(0), out_format});
+  bool same_format = SameDims(trt_input_tensors[0]->getDimensions(), in_tensors_[0].Shape()) &&
+                     SameDims(concate_layer->getOutput(0)->getDimensions(), out_tensors_[0].Shape());
+  this->AddInnerOutTensors(ITensorHelper{concate_layer->getOutput(0), out_format, same_format});
   return RET_OK;
 }
 }  // namespace mindspore::lite

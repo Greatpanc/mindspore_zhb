@@ -80,7 +80,10 @@ int DeconvolutionTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
     return RET_ERROR;
   }
   nvinfer1::Dims kernelSize = lite::ConvertCudaDims(std::vector<int64_t>(kernel_size->begin(), kernel_size->end()));
-
+  if (kernelSize.nbDims == -1) {
+    MS_LOG(ERROR) << "ConvertCudaDims failed for " << op_name_;
+    return RET_ERROR;
+  }
   // bias
   nvinfer1::Weights biasWeights{};
   if (in_tensors_.size() >= INPUT_SIZE3) {
@@ -109,7 +112,7 @@ int DeconvolutionTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
     activation_layer = deconv_layer;
   } else {
     activation_layer =
-      ActivationTensorRT::AddActivation(network, deconv_op->activation_type(), 0, deconv_layer->getOutput(0));
+      ActivationTensorRT::AddActivation(network, deconv_op->activation_type(), 0, 0, 0, deconv_layer->getOutput(0));
     if (activation_layer == nullptr) {
       MS_LOG(ERROR) << "addActivation for conv failed";
       return RET_ERROR;
@@ -117,7 +120,9 @@ int DeconvolutionTensorRT::AddInnerOp(nvinfer1::INetworkDefinition *network) {
     activation_layer->setName((op_name_ + "_activation").c_str());
   }
   activation_layer->getOutput(0)->setName((op_name_ + "_output").c_str());
-  this->AddInnerOutTensors(ITensorHelper{activation_layer->getOutput(0), Format::NCHW});
+  bool same_format = SameDims(activation_layer->getOutput(0)->getDimensions(), out_tensors_[0].Shape()) &&
+                     SameDims(tensorrt_in_tensors_[0].trt_tensor_->getDimensions(), in_tensors_[0].Shape());
+  this->AddInnerOutTensors(ITensorHelper{activation_layer->getOutput(0), Format::NCHW, same_format});
   return RET_OK;
 }
 
@@ -127,6 +132,10 @@ void DeconvolutionTensorRT::SetAttributes(const schema::Conv2dTransposeFusion *m
   auto kernel_size = ms_op->kernel_size();
   auto kernel_size_val = std::vector<int64_t>(kernel_size->begin(), kernel_size->end());
   nvinfer1::Dims kernel_size_dims = lite::ConvertCudaDims(kernel_size_val);
+  if (kernel_size_dims.nbDims == -1) {
+    MS_LOG(ERROR) << "ConvertCudaDims failed for " << op_name_;
+    return;
+  }
   decon_layer->setKernelSizeNd(kernel_size_dims);
 
   // nbOutputMaps
@@ -137,6 +146,10 @@ void DeconvolutionTensorRT::SetAttributes(const schema::Conv2dTransposeFusion *m
   auto stride = ms_op->stride();
   auto stride_val = std::vector<int64_t>(stride->begin(), stride->end());
   nvinfer1::Dims stride_dims = lite::ConvertCudaDims(stride_val);
+  if (stride_dims.nbDims == -1) {
+    MS_LOG(ERROR) << "ConvertCudaDims failed for " << op_name_;
+    return;
+  }
   decon_layer->setStrideNd(stride_dims);
 
   // nbGroups
@@ -161,12 +174,12 @@ void DeconvolutionTensorRT::SetAttributes(const schema::Conv2dTransposeFusion *m
       return;
     }
     nvinfer1::Dims dims_pre{};
-    dims_pre.nbDims = 2;
+    dims_pre.nbDims = DIMENSION_2D;
     dims_pre.d[0] = padding_val[0];  // up
     dims_pre.d[1] = padding_val[2];  // left
     decon_layer->setPrePadding(dims_pre);
     nvinfer1::Dims dims_post{};
-    dims_post.nbDims = 2;
+    dims_post.nbDims = DIMENSION_2D;
     dims_post.d[0] = padding_val[1] - out_pad_val[0];  // down
     dims_post.d[1] = padding_val[3] - out_pad_val[1];  // right
     decon_layer->setPostPadding(dims_post);
